@@ -11,3 +11,12 @@ Currently we will model Genus level classification.
 
 For full training you can download the whole data from here:
 https://www.arb-silva.de/fileadmin/silva_databases/release_132/Exports/SILVA_132_SSURef_Nr99_tax_silva.fasta.gz
+
+
+For Beginners:
+
+A nice introduction to Taxanomic classification:
+https://www.youtube.com/watch?v=HkwFdzFLZ0I
+
+The Random forest classfier 16S Classifier:
+http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0116106
