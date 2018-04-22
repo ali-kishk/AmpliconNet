@@ -5,7 +5,9 @@ Taxanomic assignment is the process of determining the microbial composition  of
 Here we try to do Machine learning taxonomic assignment using LSTM model OR CNN using CGR.
 
 The database we use for modeling is SILVA 16S RNA.
-Here a small sample of it for testing.
+Here a small sample of it for testing SILVA_132_dump.fasta .
+
+Currently we will model Genus level classification.
 
 For full training you can download the whole data from here:
 https://www.arb-silva.de/fileadmin/silva_databases/release_132/Exports/SILVA_132_SSURef_Nr99_tax_silva.fasta.gz
