@@ -1,8 +1,9 @@
-# NU_16S_Classifier
-LSTM &amp; CRG Taxonomic classifier
+# Species_MLP
+### SpeciesMLP: Sequence based Multi-layer Perceptron For Amplicon Read Classification Using Real-time Data Augmentation
+
 Taxanomic assignment is the process of determining the microbial composition  of a sample using Homolgy (alignment) or Machine Learning.
 
-Here we try to do Machine learning taxonomic assignment using LSTM model OR CNN using CGR.
+Here we try to do Machine learning taxonomic assignment using MLP which gives the same results as CNN but 20 times faster.
 
 The database we use for modeling is SILVA 16S RNA.
 Here a small sample of it for testing SILVA_132_dump.fasta .
