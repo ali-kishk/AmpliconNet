@@ -1,4 +1,4 @@
-# Species_MLP
+# SpeciesMLP
 ### SpeciesMLP: Sequence based Multi-layer Perceptron For Amplicon Read Classification Using Real-time Data Augmentation
 
 Taxanomic assignment is the process of determining the microbial composition  of a sample using Homolgy (alignment) or Machine Learning.
