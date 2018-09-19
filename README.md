@@ -1,5 +1,7 @@
 ### SpeciesMLP: 
-### Sequence based Multi-layer Perceptron For Amplicon Read Classification Using Real-time Data Augmentation
+### SpeciesMLP: Sequence based Multi-layer Perceptron for Amplicon Read Classification Using Real-time Data Augmentation
+## Ali Kishk, Mohamed El-Hadidi
+## bioRxiv 419846; doi: https://doi.org/10.1101/419846
 
 Taxanomic assignment is the process of determining the microbial composition  of a sample using Homolgy (alignment) or Machine Learning.
 
@@ -9,10 +11,10 @@ In order to reduce modeling time of the direct sequences, In-silico PCR was appl
 The database we use for modeling is SILVA 16S RNA.
 Here a small sample of it for testing SILVA_132_dump.fasta .
 
-For full training you can download the whole data from here:
+For full training you can download the whole SILVA data from here:
 https://www.arb-silva.de/fileadmin/silva_databases/release_132/Exports/SILVA_132_SSURef_tax_silva.fasta.gz
 
-For Beginners:
+For Beginners in metagenomics:
 
 A nice introduction to Taxanomic classification:
 https://www.youtube.com/watch?v=HkwFdzFLZ0I
