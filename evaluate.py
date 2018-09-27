@@ -33,9 +33,30 @@ import sys
 from train_func import *
 from train_model_search import *
 from evaluate_func import *
+import argparse
 
-database = sys.argv[1]
-kmer_size = int(sys.argv[2])
+parser = argparse.ArgumentParser(description='SpeciesMLP: 16S rRNA taxonomic classifier using deep learning')
+parser.add_argument('--database_dir', dest='database_dir',type=str, default='.', help='Input directory contains train, test & valid data')
+parser.add_argument('--kmer_size', dest='kmer_size', type=int, default=6, help='kmer size to convert the sequence of reads to sequence of kmers')
+parser.add_argument('--max_len', dest='max_len', type=int, default=320, help='A maximum length of all reads in a multifasta database \\\
+	for zero padding, You should increase it more than the actual maximum length if you are expecting longer reads in the prediction')
+parser.add_argument('--training_mode', dest='training_mode',type=str, default='best_only', help='Training search mode :\\\
+	\n - search_mlp : to search the multiperceptron model, \\\
+	\n - Search_resnet : to search teh ResNet model \\\
+	\n - best_only : to train only our best model ( MLP over sequence of kmers without word2vec) ')
+parser.add_argument('--batch_size', dest='batch_size', type=int, default=250, help='Training batch size, default 250')
+
+
+# Parameters
+args = parser.parse_args()
+batch_size = args.batch_size
+database = args.database_dir
+kmer_size = args.kmer_size
+max_len = args.max_len
+search = args.training_mode #best_only, search_resnet, search_mlp
+
+#database = sys.argv[1]
+#kmer_size = int(sys.argv[2])
 
 
 bases=['1','2','3','4']
@@ -47,15 +68,14 @@ for k in keys:
     word_to_int[all_kmers[k-1]] = keys[k-1]
 
 def main():
-	script = sys.argv[0]
-	max_len = int(sys.argv[3])
-	search = sys.argv[4] #best*9_only, search_resnet, search_mlp
-
-	embedding_matrix = build_embedding_matrix(database+'/W2V_model_'+str(kmer_size)+'_kmer.w2v',
-	                                          word_to_int)
+	#script = sys.argv[0]
+	#max_len = int(sys.argv[3])
+	#search = sys.argv[4] #best*9_only, search_resnet, search_mlp
+	if search != 'best_only':
+		embedding_matrix = build_embedding_matrix(database+'/W2V_model_'+str(kmer_size)+'_kmer.w2v', word_to_int)
+	else:
+		embedding_matrix = 0
 	train = pd.read_pickle(database+'/train.pkl')
-	train = train.sample(frac=1).reset_index(drop=True)
-	train = train.drop(columns=['Complete_species','ambiguity_count'])
 
 	max_features = 4**kmer_size +1
 	vector_size = 128
@@ -79,13 +99,14 @@ def main():
 	all_mlp_models = ['MLP_SK','MLP_W2V','MLP_SK_fixed_len','MLP_W2V_fixed_len','MLP_DC_W2V','MLP_DC_No_W2V']
 
 	if search == 'search_mlp':
-		evaluate_MLP_models(all_mlp_models,test,database,embedding_matrix,max_len,kmer_size,
+		evaluate_MLP_models(all_mlp_models,test,database,embedding_matrix,max_len,kmer_size,batch_size,
 			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 	elif search == 'search_resnet':
-		evaluate_ResNet_models(all_resnet_models,test,database,embedding_matrix,max_len,kmer_size,
+		evaluate_ResNet_models(all_resnet_models,test,database,embedding_matrix,max_len,kmer_size,batch_size,
 			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 	else:
-		evaluate_MLP_models(['MLP_SK'],test,database,embedding_matrix,max_len,kmer_size,
+		evaluate_best_only(database,embedding_matrix,max_len,kmer_size,test,batch_size,
 			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 
-main()
+if __name__ == "__main__":
+    main()

@@ -8,8 +8,6 @@ from Bio.Alphabet import generic_dna
 import numpy as np
 from numpy import array
 import pandas as pd
-from random import randint, random,sample
-import pandas as pd
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 import math
@@ -86,8 +84,8 @@ def encode_label_to_close_int(df,genus_path,species_path,encode_species = True):
     df['genus-'] = pd.factorize(df['Complete_genus'].values)[0]
     df = df.sort_values(by=['genus-'])
     #save this mapping as a pickle file for all HVR models
-    with open(genus_path, 'wb') as fp:
-        pickle.dump(genus_mapping, fp)
+    #with open(genus_path, 'wb') as fp:
+    #    pickle.dump(genus_mapping, fp)
     
     if encode_species == True:
         ddata = dd.from_pandas(df, npartitions=30)
@@ -99,40 +97,41 @@ def encode_label_to_close_int(df,genus_path,species_path,encode_species = True):
         df['species-'] = pd.factorize(df['Complete_species'].values)[0]
         df = df.sort_values(by=['species-'])
         #save this mapping as a pickle file for all HVR models
-        with open(species_path, 'wb') as fp:
-            pickle.dump(species_mapping, fp)
+        #with open(species_path, 'wb') as fp:
+        #    pickle.dump(species_mapping, fp)
     return df
 
 d = Seq.IUPAC.IUPACData.ambiguous_dna_values
 ambiguous_ch = d.keys()- ['A','G','C','T']
 
 # Replacing any ambiguity characters with random corresponding Nu character
+
 def expend_ambiguity_df(df_amb):
-    
+    d = Seq.IUPAC.IUPACData.ambiguous_dna_values
     df_amb = df_amb[df_amb['ambiguity_count']<10]
     df_amb = df_amb.reset_index().drop(columns=['index'])
     new_df = pd.DataFrame(columns=df_amb.columns)
     new_df['seq-'] = ''
     for i in range(df_amb.shape[0]):
         sample =  df_amb.iloc[i,:]
-        num_moves = len(list(map("".join, product(*map(d.get, sample['seq'])))))
-        moves = list(map("".join, product(*map(d.get, sample['seq']))))
+        acceptable_moves = len(list(map("".join, product(*map(d.get, sample['seq'])))))
         seq = sample['seq']
-        if num_moves in [1,2,3]:
+        
+        if acceptable_moves in [1,2,3]:
             new_sample = pd.DataFrame(columns=df_amb.columns)
             new_sample = new_sample.append([sample]*1)
-            choice = randint(0,num_moves-1)
-            
-            x = moves[choice]#[x[y] for y in choice]
-            new_sample['seq-'] = np.array(set(x))
+            choice = [np.random.randint(acceptable_moves)]
+            x = list(map("".join, product(*map(d.get, seq))))
+            x = [x[y] for y in choice]
+            new_sample['seq-'] = x
             new_df = pd.concat([new_df,new_sample])
         else:
             new_sample = pd.DataFrame(columns=df_amb.columns)
             new_sample = new_sample.append([sample]*1)
-            choice = randint(0,num_moves-1)
-            #x = list(map("".join, product(*map(d.get, seq))))
-            x = moves[choice]#[x[y] for y in choice]          
-            new_sample['seq-'] = np.array(set(x))
+            choice = [np.random.randint(acceptable_moves)]
+            x = list(map("".join, product(*map(d.get, seq))))
+            x = [x[y] for y in choice]          
+            new_sample['seq-'] = x
             new_df = pd.concat([new_df,new_sample])
     return new_df
 

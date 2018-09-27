@@ -11,9 +11,26 @@ from gensim.models import KeyedVectors
 import multiprocessing
 from train_func import oneHotEncoding_to_kmers
 
-database = sys.argv[1]
-kmer_size = int(sys.argv[2])
-MAX_LEN = int(sys.argv[3])
+import argparse
+
+parser = argparse.ArgumentParser(description='SpeciesMLP: 16S rRNA taxonomic classifier using deep learning')
+
+parser.add_argument('--database_dir', dest='database_dir',type=str, default='.', help='Input directory contains train, test & valid data')
+parser.add_argument('--kmer_size', dest='kmer_size', type=int, default=6, help='kmer size to convert the sequence of reads to sequence of kmers')
+parser.add_argument('--max_len', dest='max_len', type=int, default=320, help='A maximum length of all reads in a multifasta database \\\
+	for zero padding, You should increase it more than the actual maximum length if you are expecting longer reads in the prediction')
+
+# Parameters
+
+args = parser.parse_args()
+
+database = args.database_dir
+kmer_size = args.kmer_size
+MAX_LEN = args.max_len
+
+#database = sys.argv[1]
+#kmer_size = int(sys.argv[2])
+#MAX_LEN = int(sys.argv[3])
 
 bases=['1','2','3','4']
 all_kmers = [''.join(p) for p in itertools.product(bases, repeat=kmer_size)]
@@ -33,8 +50,7 @@ def save_kmerized_corpus(path, kmer_size,train):
 
 
 def main():
-	script = sys.argv[0]
-
+	#script = sys.argv[0]
 	train = pd.read_pickle(''.join(database+'/train.pkl'))
 	valid = pd.read_pickle(''.join(database+'/valid.pkl'))
 
@@ -71,4 +87,5 @@ def main():
 	#word2vec.train(sentences=corpus,epochs=4,total_examples=word2vec.corpus_count)
 	word2vec.wv.save_word2vec_format(''.join(database+'/W2V_model_'+str(kmer_size)+'_kmer.w2v'))
 
-main()
+if __name__ == "__main__":
+    main()

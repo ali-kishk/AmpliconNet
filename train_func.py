@@ -56,19 +56,19 @@ def oneHotEncoding_to_kmers(encoded_list,kmer_size):
     return word_list
 
 # Creating a simulated read of a fixed length
-def simulate_reads(list1,len1 = 100):
+def simulate_reads(list1,len1):
     start = randint(len(list1)-len1)
     return list1[start:start+len1]
 
 # Creating a simulated read of a minumum length = min_len & maximum length = max_len (maximum length in a given database) 
-def simulate_reads_range(list1,min_len=50):
+def simulate_reads_range(list1,min_len):
     random.seed(random.randint(1,1000))
     start = randint(len(list1)-min_len)
-    end = randint(start+min_len,len(list1))
+    end   = randint(start+min_len,len(list1))
     return list1[start:end]
 
 # A generator function of a variable length subsequence that changes in each epoch
-def simulate_ngs_generator(df,len1 = 50,batch_size=250,max_len=320):
+def simulate_ngs_generator(df,len1 ,batch_size,max_len):
     y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5,y_sim_6 = df['phylum-'].values,df['class_-'].values,df['order-'].values,df['family-'].values,df['genus-'].values,df['species-'].values
     x_sim = df['encoded'].apply(lambda x : simulate_reads_range(x,min_len=len1))
     x_sim = pad_sequences(x_sim.values,maxlen=max_len)
@@ -96,11 +96,11 @@ def simulate_ngs_generator(df,len1 = 50,batch_size=250,max_len=320):
         yield X_batch, [y_1,y_2,y_3,y_4,y_5,y_6]
 
 # A generator function of a fixed length subsequence that changes in each epoch
-def simulate_ngs_generator_fixed_len(df,len1 = 100,batch_size=250,max_len=320):
+def simulate_ngs_generator_fixed_len(df,len1,batch_size,max_len):
     y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5,y_sim_6 = df['phylum-'].values,df['class_-'].values,df['order-'].values,df['family-'].values,df['genus-'].values,df['species-'].values
     x_sim = df['encoded'].apply(lambda x : simulate_reads(x,len1=len1))
-    x_sim = pad_sequences(x_simodel.values,maxlen=max_len)
-    x_sim = array(np.concatenate(x_sim).reshape(x_simodel.shape[0],max_len).tolist()).astype('uint16')
+    x_sim = pad_sequences(x_sim.values,maxlen=max_len)
+    x_sim = array(np.concatenate(x_sim).reshape(x_sim.shape[0],max_len).tolist()).astype('uint16')
     samples_per_epoch = df.shape[0]
     number_of_batches = samples_per_epoch//batch_size
     counter=0
@@ -119,8 +119,8 @@ def simulate_ngs_generator_fixed_len(df,len1 = 100,batch_size=250,max_len=320):
             del x_sim
             y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5,y_sim_6 = df['phylum-'].values,df['class_-'].values,df['order-'].values,df['family-'].values,df['genus-'].values,df['species-'].values
             x_sim = df['encoded'].apply(lambda x : simulate_reads(x,len1=len1))
-            x_sim = pad_sequences(x_simodel.values,maxlen=max_len)
-            x_sim = array(np.concatenate(x_sim).reshape(x_simodel.shape[0],max_len).tolist()).astype('uint16')
+            x_sim = pad_sequences(x_sim.values,maxlen=max_len)
+            x_sim = array(np.concatenate(x_sim).reshape(x_sim.shape[0],max_len).tolist()).astype('uint16')
         yield X_batch,[y_1,y_2,y_3,y_4,y_5,y_6]
 
 # AdamW optimizer function
@@ -283,7 +283,7 @@ def build_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,classes_1,c
 	max_features = 4**kmer_size +1
 
 	if Traniable_embedding ==True:
-		main = Embedding(5, 128)(inp)
+		main = Embedding(max_features, 128)(inp)
 	else:
 		main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
 

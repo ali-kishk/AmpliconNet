@@ -33,31 +33,30 @@ import sys
 from train_func import *
 from train_model_search import *
 
-test  = pd.read_pickle(database+'/test.pkl')
-test  = test.sample(frac=1).reset_index(drop=True)
-test  = test.drop(columns=['Complete_species','ambiguity_count'])
-test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
-
-
-
-def evaluate_multioutput_on_different_length(model, lengths,data,batch_size,save_path):
+lengths=[25,50,75,100,125,'full_HVR']
+batch_size = 5
+def evaluate_multioutput_on_different_length(model, lengths,data,batch_size,save_path,max_len):
     eval_df =  pd.DataFrame(np.zeros((6,len(lengths))),columns=lengths,index=['Phylum','Order','Class','Family','Genus','Species'])
     for len_ in range(len(lengths[:-1])):
-        eval_df.iloc[:,len_] = model.evaluate_generator(simulate_ngs_generator_fixed_len(data,len1=lengths[len_],batch_size=batch_size),
-                                                                                                verbose=2,steps=data.shape[0]//batch_size)[-6:]
+        gen = simulate_ngs_generator_fixed_len(data,len1=lengths[len_],batch_size=batch_size,max_len=max_len)
+        eval_df.iloc[:,len_] = model.evaluate_generator(gen,verbose=2,steps=data.shape[0]//batch_size)[-6:]
         eval_df.to_csv(save_path)  
     data['simulated'] = pad_sequences(data['encoded'].values,maxlen=max_len).tolist()
     y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5,y_sim_6 = data['phylum-'].values,data['class_-'].values,data['order-'].values,data['family-'].values,data['genus-'].values,data['species-'].values
     x_sim = data['simulated']
-    x_sim = array(np.concatenate(x_simodel.values).reshape(x_simodel.shape[0],max_len).tolist()).astype('uint16')
-    eval_df.iloc[:,-1]= model.evaluate(x_sim,[y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5,y_sim_6 ],batch_size=250)[-6:]
+    x_sim = array(np.concatenate(x_sim.values).reshape(x_sim.shape[0],max_len).tolist()).astype('uint16')
+    eval_df.iloc[:,-1]= model.evaluate(x_sim,[y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5,y_sim_6 ],batch_size=50)[-6:]
     eval_df.to_csv(save_path)
     return eval_df
 
 
-def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,kmer_size,
+def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,kmer_size,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    batch_size = 5
+    test  = pd.read_pickle(database+'/test.pkl')
+    test  = test.sample(frac=1).reset_index(drop=True)
+    test  = test.drop(columns=['Complete_species','ambiguity_count'])
+    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+
     for x in range(len(input_types)):
 
         if input_types[x] == 'ResNet_SK':
@@ -65,29 +64,29 @@ def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,km
             #ResNet SK
             model = build_resnet(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_SK.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/ResNet_SK.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/ResNet_SK.csv'),max_len=max_len)
 
         elif input_types[x] == 'ResNet_W2V':
 
             #ResNet W2V
             model = build_resnet(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_W2V.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/ResNet_W2V.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/ResNet_W2V.csv'),max_len=max_len)
         elif input_types[x] == 'ResNet_SK_fixed_len':
             #ResNet_SK_fixed_len
             model = build_resnet(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_SK_Fixed_len.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/ResNet_SK_Fixed_len.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/ResNet_SK_Fixed_len.csv'),max_len=max_len)
 
         elif input_types[x] == 'ResNet_W2V_fixed_len':
             #ResNet_W2V_fixed_len
             model = build_resnet(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_W2V_fixed_len.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/ResNet_W2V_fixed_len.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/ResNet_W2V_fixed_len.csv'),max_len=max_len)
 
         elif input_types[x] == 'ResNet_DC_W2V':
             #ResNet_DC_W2V
@@ -97,8 +96,8 @@ def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,km
 
             model = build_resnet(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_DC_W2V.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/ResNet_DC_W2V.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/ResNet_DC_W2V.csv'),max_len=max_len)
         else:
             #ResNet_DC_No_W2V
             test  = pd.read_pickle(database+'/test.pkl')
@@ -107,13 +106,17 @@ def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,km
 
             model = build_resnet(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_DC_No_W2V.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/ResNet_DC_No_W2V.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/ResNet_DC_No_W2V.csv'),max_len=max_len)
 
 
-def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_size,
+def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_size,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    batch_size = 5
+    test  = pd.read_pickle(database+'/test.pkl')
+    test  = test.sample(frac=1).reset_index(drop=True)
+    test  = test.drop(columns=['Complete_species','ambiguity_count'])
+    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+
     for x in range(len(input_types)):
 
         if input_types[x] == 'MLP_SK':
@@ -121,30 +124,29 @@ def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_
             #MLP SK
             model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_SK.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/MLP_SK.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/MLP_SK.csv'),max_len=max_len)
         elif input_types[x] == 'MLP_W2V':
 
             #MLP W2V
-            batch_size = 5
             model = build_mlp(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_W2V.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/MLP_W2V.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/MLP_W2V.csv'),max_len=max_len)
 
         elif input_types[x] == 'MLP_SK_fixed_len':
             #MLP_SK_fixed_len
             model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_SK_fixed_len.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/MLP_SK_fixed_len.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/MLP_SK_fixed_len.csv'),max_len=max_len)
 
         elif input_types[x] == 'MLP_W2V_fixed_len':
             #MLP_W2V_fixed_len
             model = build_mlp(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_W2V_fixed_len.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/MLP_W2V_fixed_len.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/MLP_W2V_fixed_len.csv'),max_len=max_len)
 
         elif input_types[x] == 'MLP_DC_W2V':
             #MLP_DC_W2V
@@ -154,8 +156,8 @@ def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_
 
             model = build_mlp(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_DC_W2V.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/MLP_DC_W2V.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/MLP_DC_W2V.csv'),max_len=max_len)
         else:
             #MLP_DC_No_W2V
             test  = pd.read_pickle(database+'/test.pkl')
@@ -164,5 +166,19 @@ def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_
 
             model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_DC_No_W2V.hdfs')
-            evaluate_multioutput_on_different_length(model=m, lengths=[25,50,75,100,125,'full_HVR'],data=test,
-                                                     batch_size=250,save_path=''.join(database+'./results/MLP_DC_No_W2V.csv'))
+            evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                                     batch_size=250,save_path=''.join(database+'/results/MLP_DC_No_W2V.csv'),max_len=max_len)
+
+
+def evaluate_best_only(database,embedding_matrix,max_len,kmer_size,test,batch_size,
+    classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
+    test  = pd.read_pickle(database+'/test.pkl')
+    test  = test.sample(frac=1).reset_index(drop=True)
+    test  = test.drop(columns=['Complete_species','ambiguity_count'])
+    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+
+    #MLP SK
+    model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+    model.load_weights(database+'/models/MLP_SK.hdfs')
+    evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
+                                             batch_size=50,save_path=''.join(database+'/results/MLP_SK.csv'),max_len=max_len)

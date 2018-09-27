@@ -36,16 +36,15 @@ import os
 import sys
 from train_func import *
 
-def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,
+def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,
 	classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-	batch_size = 5
+
 	for x in range(len(input_types)):
 		
 		if input_types[x] == 'ResNet_SK':
 
 			#ResNet SK
 			model = build_resnet(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
-			#model.load_weights(database+'/models/ResNet_SK.hdfs')
 			filepath = ''.join(database+'/models/ResNet_SK.hdfs')
 			Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
 			csv_logger = CSVLogger(database+'/log/ResNet_SK.log')
@@ -156,10 +155,8 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
 				                verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
 
 
-def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,
+def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,
 	classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-
-	batch_size = 5
 
 	for x in range(len(input_types)):
 
@@ -183,7 +180,6 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
 		elif input_types[x] == 'MLP_W2V':
 
 			#MLP W2V
-			batch_size = 5
 			model = build_mlp(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 			filepath = ''.join(database+'/models/MLP_W2V.hdfs')
 			Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
@@ -201,7 +197,6 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
 			#MLP_SK_fixed_len
 			model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 			optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
-			#model.load_weights(database+'/models/Fixed_len_MLP_like_N.hdfs')
 			filepath = ''.join(database+'/models/MLP_SK_Fixed_len.hdfs')
 			Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
 			csv_logger = CSVLogger(database+'/models/MLP_SK_Fixed_len.log')
@@ -220,7 +215,6 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
 			#MLP_W2V_fixed_len
 			model = build_mlp(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 			optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
-			#model.load_weights(database+'/models/Fixed_len_MLP_like_N.hdfs')
 			filepath = ''.join(database+'/models/MLP_SK_Fixed_len.hdfs')
 			Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
 			csv_logger = CSVLogger(database+'/models/MLP_SK_Fixed_len.log')
@@ -279,3 +273,21 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
 				                validation_data=valid_generator,
 				                validation_steps=valid.shape[0]//batch_size,
 				                verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
+
+def train_best_only(train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,
+	classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
+	print(train.shape[0]//batch_size)
+	#MLP SK
+	model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+	filepath = ''.join(database+'/models/MLP_SK.hdfs')
+	Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
+	csv_logger = CSVLogger(database+'/log/MLP_SK.log')
+	EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
+	train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
+	valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+	model.fit_generator(train_generator,steps_per_epoch=train.shape[0]//batch_size,
+				        epochs=50,shuffle=True,
+				        validation_data=valid_generator,
+				        validation_steps=valid.shape[0]//batch_size,
+				        verbose=1,
+				        callbacks=[Checkpoint,csv_logger,EarlyStop])
