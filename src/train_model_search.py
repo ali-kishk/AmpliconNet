@@ -274,7 +274,7 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
 				                validation_steps=valid.shape[0]//batch_size,
 				                verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
 
-def train_best_only(train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,
+def train_best_only(train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,load_mode,
 	classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
 	print(train.shape[0]//batch_size)
 	#MLP SK
@@ -282,6 +282,10 @@ def train_best_only(train,valid,database,embedding_matrix,max_len,kmer_size,batc
 	filepath = ''.join(database+'/models/MLP_SK.hdfs')
 	Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
 	csv_logger = CSVLogger(database+'/log/MLP_SK.log')
+	if load_mode ==True:
+		model.load_weights(database+'/models/MLP_SK.hdfs')
+	else:
+		pass
 	EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
 	train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
 	valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)

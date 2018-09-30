@@ -44,6 +44,7 @@ parser.add_argument('--training_mode', dest='training_mode',type=str, default='b
 	\n - Search_resnet : to search teh ResNet model \\\
 	\n - best_only : to train only our best model ( MLP over sequence of kmers without word2vec) ')
 parser.add_argument('--batch_size', dest='batch_size', type=int, default=250, help='Training batch size, default 250')
+parser.add_argument('--load_mode', dest='load_mode', type=bool, default=False, help='If the model should load pretrained model, default False')
 
 # Parameters
 args = parser.parse_args()
@@ -53,6 +54,7 @@ kmer_size = args.kmer_size
 batch_size = args.batch_size
 max_len = args.max_len
 search = args.training_mode #best_only, search_resnet, search_mlp
+load_mode = args.load_mode
 
 
 #database = sys.argv[1]
@@ -70,9 +72,6 @@ for k in keys:
 
 
 def main():
-	#script = sys.argv[0]
-	#max_len = int(sys.argv[3])
-	#search = str(sys.argv[4]) #best_only, search_resnet, search_mlp
 	if search != 'best_only':
 		embedding_matrix = build_embedding_matrix(database+'/W2V_model_'+str(kmer_size)+'_kmer.w2v', word_to_int)
 	else:
@@ -80,14 +79,12 @@ def main():
 
 	valid = pd.read_pickle(database+'/valid.pkl')
 	train = pd.read_pickle(database+'/train.pkl')
-	print(train.shape)
+
 
 	train['len'] = train['encoded'].apply(lambda x: len(x))
 	train = train[train['len']>50]
 	valid['len'] = valid['encoded'].apply(lambda x: len(x))
 	valid = valid[valid['len']>50]
-
-	print(train['len'].values)
 	
 	train = train.sample(frac=1).reset_index(drop=True)
 	valid = valid.sample(frac=1).reset_index(drop=True)
@@ -109,11 +106,12 @@ def main():
 	classes_4 = max(train['family-'])  +1
 	classes_5 = max(train['genus-'])   +1
 	classes_6 = max(train['species-']) +1
-
-	os.mkdir(database+'/models')
-	os.mkdir(database+'/log')
-	os.mkdir(database+'/results')
-
+	if load_mode == False:
+		os.mkdir(database+'/models')
+		os.mkdir(database+'/log')
+		os.mkdir(database+'/results')
+	else:
+		pass
 # DC: direct chracters without any converting to kmers
 # SK: sequence of kmers without Word2Vec
 # W2V: sequence of kmers with Word2Vec
@@ -130,7 +128,7 @@ def main():
 			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 
 	elif search == 'best_only':
-		train_best_only(train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,
+		train_best_only(train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,load_mode,
 			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 	else:
 		print('Wrong search type ! ')

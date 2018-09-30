@@ -119,7 +119,7 @@ def main():
 	counts = df['species-'].value_counts()
 	df = df[df['species-'].isin(counts[counts > 2].index)]
 
-	print('\n Step 3: Stratified sampling to Train, Tet, validation datasets\n')
+	print('\n Step 3: Stratified sampling to Train, Test, validation datasets\n')
 	train,test,_,_ = train_test_split(df,df['species-'],random_state= 1,test_size = 0.2)
 	train,valid,_,_ = train_test_split(train,train['species-'],random_state= 1,test_size = 0.15)
 	train = train[train['species-'].isin(unique(valid['species-']))]
