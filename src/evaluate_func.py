@@ -50,7 +50,7 @@ def evaluate_multioutput_on_different_length(model, lengths,data,batch_size,save
     return eval_df
 
 
-def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,kmer_size,batch_size,
+def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
     test  = pd.read_pickle(database+'/test.pkl')
     test  = test.sample(frac=1).reset_index(drop=True)
@@ -62,7 +62,7 @@ def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,km
         if input_types[x] == 'ResNet_SK':
 
             #ResNet SK
-            model = build_resnet(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_resnet(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_SK.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/ResNet_SK.csv'),max_len=max_len)
@@ -70,20 +70,20 @@ def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,km
         elif input_types[x] == 'ResNet_W2V':
 
             #ResNet W2V
-            model = build_resnet(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_resnet(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_W2V.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/ResNet_W2V.csv'),max_len=max_len)
         elif input_types[x] == 'ResNet_SK_fixed_len':
             #ResNet_SK_fixed_len
-            model = build_resnet(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_resnet(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_SK_Fixed_len.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/ResNet_SK_Fixed_len.csv'),max_len=max_len)
 
         elif input_types[x] == 'ResNet_W2V_fixed_len':
             #ResNet_W2V_fixed_len
-            model = build_resnet(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_resnet(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_W2V_fixed_len.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/ResNet_W2V_fixed_len.csv'),max_len=max_len)
@@ -94,7 +94,7 @@ def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,km
             test  = test.sample(frac=1).reset_index(drop=True)
             test  = test.drop(columns=['Complete_species','ambiguity_count'])
 
-            model = build_resnet(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_resnet(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_DC_W2V.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/ResNet_DC_W2V.csv'),max_len=max_len)
@@ -104,13 +104,13 @@ def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,km
             test  = test.sample(frac=1).reset_index(drop=True)
             test  = test.drop(columns=['Complete_species','ambiguity_count'])
 
-            model = build_resnet(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_resnet(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_DC_No_W2V.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/ResNet_DC_No_W2V.csv'),max_len=max_len)
 
 
-def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_size,batch_size,
+def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_size,metrics,metrics,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
     test  = pd.read_pickle(database+'/test.pkl')
     test  = test.sample(frac=1).reset_index(drop=True)
@@ -122,28 +122,28 @@ def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_
         if input_types[x] == 'MLP_SK':
 
             #MLP SK
-            model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_SK.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/MLP_SK.csv'),max_len=max_len)
         elif input_types[x] == 'MLP_W2V':
 
             #MLP W2V
-            model = build_mlp(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_mlp(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_W2V.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/MLP_W2V.csv'),max_len=max_len)
 
         elif input_types[x] == 'MLP_SK_fixed_len':
             #MLP_SK_fixed_len
-            model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_SK_fixed_len.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/MLP_SK_fixed_len.csv'),max_len=max_len)
 
         elif input_types[x] == 'MLP_W2V_fixed_len':
             #MLP_W2V_fixed_len
-            model = build_mlp(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_mlp(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_W2V_fixed_len.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/MLP_W2V_fixed_len.csv'),max_len=max_len)
@@ -154,7 +154,7 @@ def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_
             test  = test.sample(frac=1).reset_index(drop=True)
             test  = test.drop(columns=['Complete_species','ambiguity_count'])
 
-            model = build_mlp(False,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_mlp(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_DC_W2V.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/MLP_DC_W2V.csv'),max_len=max_len)
@@ -164,13 +164,13 @@ def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_
             test  = test.sample(frac=1).reset_index(drop=True)
             test  = test.drop(columns=['Complete_species','ambiguity_count'])
 
-            model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_DC_No_W2V.hdfs')
             evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                                      batch_size=250,save_path=''.join(database+'/results/MLP_DC_No_W2V.csv'),max_len=max_len)
 
 
-def evaluate_best_only(database,embedding_matrix,max_len,kmer_size,test,batch_size,
+def evaluate_best_only(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
     test  = pd.read_pickle(database+'/test.pkl')
     test  = test.sample(frac=1).reset_index(drop=True)
@@ -178,7 +178,8 @@ def evaluate_best_only(database,embedding_matrix,max_len,kmer_size,test,batch_si
     test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
 
     #MLP SK
-    model = build_mlp(True,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+    model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,
+        classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
     model.load_weights(database+'/models/MLP_SK.hdfs')
     evaluate_multioutput_on_different_length(model=model, lengths=[25,50,75,100,125,'full_HVR'],data=test,
                                              batch_size=50,save_path=''.join(database+'/results/MLP_SK.csv'),max_len=max_len)

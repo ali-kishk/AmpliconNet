@@ -45,6 +45,7 @@ parser.add_argument('--training_mode', dest='training_mode',type=str, default='b
 	\n - best_only : to train only our best model ( MLP over sequence of kmers without word2vec) ')
 parser.add_argument('--batch_size', dest='batch_size', type=int, default=250, help='Training batch size, default 250')
 parser.add_argument('--load_mode', dest='load_mode', type=bool, default=False, help='If the model should load pretrained model, default False')
+parser.add_argument('--metrics', dest='metrics', type=str, default='accuracy', help='accuracy or f1 training metrics')
 
 # Parameters
 args = parser.parse_args()
@@ -55,7 +56,7 @@ batch_size = args.batch_size
 max_len = args.max_len
 search = args.training_mode #best_only, search_resnet, search_mlp
 load_mode = args.load_mode
-
+metrics = args.metrics
 
 #database = sys.argv[1]
 #kmer_size = int(sys.argv[2])
@@ -120,15 +121,15 @@ def main():
 	all_mlp_models = ['MLP_SK','MLP_W2V','MLP_SK_fixed_len','MLP_W2V_fixed_len','MLP_DC_W2V','MLP_DC_No_W2V']
 
 	if search == 'search_mlp':
-		search_MLP_models(all_mlp_models,train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,
+		search_MLP_models(all_mlp_models,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
 			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 
 	elif search == 'search_resnet':
-		search_ResNet_models(all_resnet_models,train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,
+		search_ResNet_models(all_resnet_models,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
 			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 
 	elif search == 'best_only':
-		train_best_only(train,valid,database,embedding_matrix,max_len,kmer_size,batch_size,load_mode,
+		train_best_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,
 			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 	else:
 		print('Wrong search type ! ')

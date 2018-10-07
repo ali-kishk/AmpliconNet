@@ -207,8 +207,41 @@ class AdamW(Optimizer):
         base_config = super(AdamW, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+from keras import backend as K
+
+def f1(y_true, y_pred):
+    def recall(y_true, y_pred):
+        """Recall metric.
+
+        Only computes a batch-wise average of recall.
+
+        Computes the recall, a metric for multi-label classification of
+        how many relevant items are selected.
+        """
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+        recall = true_positives / (possible_positives + K.epsilon())
+        return recall
+
+    def precision(y_true, y_pred):
+        """Precision metric.
+
+        Only computes a batch-wise average of precision.
+
+        Computes the precision, a metric for multi-label classification of
+        how many selected items are relevant.
+        """
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+        precision = true_positives / (predicted_positives + K.epsilon())
+        return precision
+    precision = precision(y_true, y_pred)
+    recall = recall(y_true, y_pred)
+    return 2*((precision*recall)/(precision+recall+K.epsilon()))
+
 # A function for building ResNet model
-def build_resnet(Traniable_embedding,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
+def build_resnet(Traniable_embedding,embedding_matrix,max_len,kmer_size,metric,
+	classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
 
 	inp = Input(shape=(max_len,),dtype='uint16')
 	max_features = 4**kmer_size +1
@@ -274,11 +307,12 @@ def build_resnet(Traniable_embedding,embedding_matrix,max_len,kmer_size,classes_
 
 	model = Model(inputs=[inp], outputs=[out1,out2,out3,out4,out5,out6])
 	optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
-	model.compile(loss='sparse_categorical_crossentropy',optimizer=optimizer,metrics=['acc'])
+	model.compile(loss='sparse_categorical_crossentropy',optimizer=optimizer,metrics=[metric])
 	return model
 
 
-def build_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
+def build_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,metric,
+	classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
 	inp = Input(shape=(max_len,),dtype='uint16')
 	max_features = 4**kmer_size +1
 
@@ -300,5 +334,5 @@ def build_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,classes_1,c
 	out6 = Dense(classes_6,activation='softmax')(main)
 	model = Model(inputs=[inp], outputs=[out1,out2,out3,out4,out5,out6])
 	optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
-	model.compile(loss='sparse_categorical_crossentropy',optimizer=optimizer,metrics=['acc'])
+	model.compile(loss='sparse_categorical_crossentropy',optimizer=optimizer,metrics=[metric])
 	return model
