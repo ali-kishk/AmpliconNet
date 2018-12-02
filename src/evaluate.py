@@ -15,7 +15,6 @@ from keras.layers import Concatenate, LeakyReLU, concatenate,GRU, Bidirectional,
 from keras.layers import Dense, Embedding, Input, Masking, Dropout, MaxPooling1D,Lambda, BatchNormalization, Reshape
 from keras.layers import LSTM, TimeDistributed, AveragePooling1D, Flatten,Activation,ZeroPadding1D
 from keras.optimizers import Adam, rmsprop
-from keras.utils.training_utils import multi_gpu_model
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping,ModelCheckpoint, CSVLogger
 from keras.layers import Conv1D, GlobalMaxPooling1D, ConvLSTM2D, Bidirectional,RepeatVector
 from keras.regularizers import *
@@ -46,7 +45,7 @@ parser.add_argument('--training_mode', dest='training_mode',type=str, default='b
 	\n - best_only : to train only our best model ( MLP over sequence of kmers without word2vec) ')
 parser.add_argument('--batch_size', dest='batch_size', type=int, default=250, help='Training batch size, default 250')
 parser.add_argument('--metrics', dest='metrics', type=str, default='accuracy', help='accuracy or f1 training metrics')
-
+parser.add_argument('--genus_only', dest='genus_only', type=bool, default=True, help='Whetether to model the genus level onlyOR to  add species level')
 
 # Parameters
 args = parser.parse_args()
@@ -56,10 +55,7 @@ kmer_size = args.kmer_size
 max_len = args.max_len
 search = args.training_mode #best_only, search_resnet, search_mlp
 metrics = args.metrics
-
-
-#database = sys.argv[1]
-#kmer_size = int(sys.argv[2])
+genus_only = args.genus_only
 
 
 bases=['1','2','3','4']
@@ -83,18 +79,28 @@ def main():
 	max_features = 4**kmer_size +1
 	vector_size = 128
 
-	classes_1 = max(train['phylum-'])  +1
-	classes_2 = max(train['class_-'])  +1
-	classes_3 = max(train['order-'])   +1
-	classes_4 = max(train['family-'])  +1
-	classes_5 = max(train['genus-'])   +1
-	classes_6 = max(train['species-']) +1
+	classes_1 = max(train['phylum'])  +1
+	classes_2 = max(train['class_'])  +1
+	classes_3 = max(train['order'])   +1
+	classes_4 = max(train['family'])  +1
+	classes_5 = max(train['genus'])   +1
+	if genus_only == True:
+		classes_6 = 0
+	else:
+		classes_6 = max(train['species']) +1
+
 	test  = pd.read_pickle(database+'/test.pkl')
 	test['len'] = test['encoded'].apply(lambda x: len(x))
-	test = test[test['len']>125]
+	print( 'Minimum length in all reads before filteration is : ' + str(min(test['len'])))
+	test = test[test['len']>50]
+	print( 'Minimum length in all reads after filteration is : ' + str(min(test['len'])))
+	#print(test.shape)
 	test  = test.sample(frac=1).reset_index(drop=True)
-	test  = test.drop(columns=['Complete_species','ambiguity_count'])
+	num_steps = test.shape[0]//batch_size
+	test = test.iloc[:num_steps*batch_size,:]
+	print(test.shape)
 	test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+	#test = pd.concat([test,test])
 
 # DC: direct chracters without any converting to kmers
 # SK: sequence of kmers without Word2Vec
@@ -102,6 +108,7 @@ def main():
 
 	all_resnet_models = ['ResNet_SK','ResNet_W2V','ResNet_SK_fixed_len','ResNet_W2V_fixed_len','ResNet_DC_W2V','ResNet_DC_No_W2V']
 	all_mlp_models = ['MLP_SK','MLP_W2V','MLP_SK_fixed_len','MLP_W2V_fixed_len','MLP_DC_W2V','MLP_DC_No_W2V']
+	all_gru_models = ['GRU_SK','GRU_W2V','GRU_SK_fixed_len','GRU_W2V_fixed_len','GRU_DC_W2V','GRU_DC_No_W2V']
 
 	if search == 'search_mlp':
 		evaluate_MLP_models(all_mlp_models,test,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
@@ -109,9 +116,23 @@ def main():
 	elif search == 'search_resnet':
 		evaluate_ResNet_models(all_resnet_models,test,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
 			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+	elif search == 'search_gru':
+		evaluate_GRU_models(all_gru_models,test,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
+			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)	
+	if search == 'mlp_sk':
+		evaluate_mlp_only(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
+    classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+	elif search == 'resnet_sk':
+		evaluate_resnet_only(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
+    classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+	elif search == 'gru_sk':
+		evaluate_gru_only(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
+    classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)				
+	elif search == 'multi_task':
+		evaluate_multi_task(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
+    		classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 	else:
-		evaluate_best_only(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
-			classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+		print('Wrong search type ! ')
 
 if __name__ == "__main__":
     main()

@@ -23,13 +23,21 @@ from random import randint, random,sample
 ## Functions to concatenate the labels from phylum to genus as some sequences has repeated genus over different families
 def from_phylum_to_genus(df):
     class__ = ''.join(#'K_'+str(df['kingdom'])+'__'+
+                      'P_'+str(df['phylum-'])+'__'+
+                      'C_'+str(df['class_-'])+'__'+
+                      'O_'+str(df['order-'])+'__'+
+                      'F_'+str(df['family-'])+'__'+
+                      'G_'+str(df['genus']))
+    return class__
+
+def from_phylum_to_genus_(df):
+    class__ = ''.join(#'K_'+str(df['kingdom'])+'__'+
                       'P_'+str(df['phylum'])+'__'+
                       'C_'+str(df['class_'])+'__'+
                       'O_'+str(df['order'])+'__'+
                       'F_'+str(df['family'])+'__'+
                       'G_'+str(df['genus']))
     return class__
-
 
 def from_phylum_to_species(df):
     class__ = ''.join(#'K_'+str(df['kingdom'])+'__'+
@@ -77,12 +85,19 @@ def encode_label_to_close_int(df,genus_path,species_path,encode_species = True):
     ## As some genus isn "unidetified" across many families, so 
     ## concatenate SILVA labels to one label from kingdom to genus
     ddata = dd.from_pandas(df, npartitions=30)
-    df['Complete_genus'] = ddata.map_partitions(lambda df:df.apply(lambda row: 
+    df['genus-'] = ddata.map_partitions(lambda df:df.apply(lambda row: 
                                                                    from_phylum_to_genus(row),
                                                                     axis=1)).compute(scheduler='threads')
-    genus_mapping = pd.factorize(df['Complete_genus'].values)[1]
-    df['genus-'] = pd.factorize(df['Complete_genus'].values)[0]
+    genus_mapping = pd.factorize(df['genus-'].values)[1]
+    df['genus-'] = pd.factorize(df['genus-'].values)[0]
     df = df.sort_values(by=['genus-'])
+
+    df['genus'] = ddata.map_partitions(lambda df:df.apply(lambda row: 
+                                                                   from_phylum_to_genus_(row),
+                                                                    axis=1)).compute(scheduler='threads')
+    #df['genus','genus-'].to_csv(genus_path)
+    
+    #df = df.sort_values(by=['genus-'])
     #save this mapping as a pickle file for all HVR models
     #with open(genus_path, 'wb') as fp:
     #    pickle.dump(genus_mapping, fp)
@@ -147,3 +162,60 @@ int_to_char = {1:'A',2:'C',3:'G',4:'T',5:'R',6:'Y',7:'S',
 #3 convert char to number
 def encode_nu(sequence):
     return array([char_to_int[char] for char in sequence])
+
+# Decode a encoded string
+def decode_nu(encoded):
+    decoded =  ''
+    decoded = [int_to_char[integ] for integ in encoded]
+    return decoded
+
+#build tree from a dataframe with all ranks till genus for evaluation
+
+def build_tree(df):
+  label1 = np.unique(df['phylum'].values)
+  label2 = np.unique(df['class_'].values)
+  label3 = np.unique(df['order'].values)
+  label4 = np.unique(df['family'].values)
+  label5 = np.unique(df['genus'].values)
+  lst1 , lst2 , lst3 , lst4, lst5 = [],[],[],[],[]
+  for p in label1:
+    for c in label2:
+      if c in df[df['phylum'] ==c]['class_']:
+        lst2.append(lst3)
+      else:
+        pass
+      for o in label3:
+        if o in df[df['class_'] ==c]['order']:
+          lst3.append(lst4)
+        else:
+          pass
+        for f in label4:
+          if f in df[df['order'] ==o]['family']:
+            lst4.append(lst5)
+          else:
+            pass
+          for g in label5:
+            if g in df[df['family'] ==f]['genus']:
+              lst5.append(g)
+            else:
+              pass
+  return lst2
+
+def _2fasta_header(df):
+    class_ = str(df['phylum'])+';'+str(df['class_'])+';'+str(df['order'])+';'+str(df['family'])+';'+str(df['genus'])
+    return str(class_)
+
+def pickle_2_fasta(df_path,fasta_name):
+    df = pd.read_pickle(df_path)
+    df = df.reset_index(drop=True)
+    ddata = dd.from_pandas(df, npartitions=30)
+    df['id'] = ddata.map_partitions(lambda df:df.apply(lambda row: _2fasta_header(row),
+                                                       axis=1)).compute(scheduler='threads')
+    df['seq'] = df['encoded'].apply(decode_nu)
+    seq_list=[]
+    for i in range(df.shape[0]):
+        seq = Seq.Seq(''.join(x for x in df.iloc[i,:]['seq']))
+        id_ = df.iloc[i,:]['id']
+        record = SeqIO.SeqRecord(seq,id_)
+        seq_list.append(record)
+    SeqIO.write(seq_list,fasta_name,'fasta')

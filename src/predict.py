@@ -35,7 +35,7 @@ database = args.database
 model_param_path = args.model_param_path
 output_dir = args.output_dir
 model_path = args.model_path
-model_path = ''.join(database+'/models/'+model_path)
+#model_path = ''.join(database+'/models/'+model_path)
 
 def read_fastq(file_path):
     reads=[]
@@ -64,10 +64,14 @@ def batch_predict(dir_path,model_param_path,model_path,database,output_dir):
     order_map = pd.read_pickle(database+'/order_mapping.pkl')
     family_map = pd.read_pickle(database+'/family_mapping.pkl')
     genus_map = pd.read_pickle(database+'/genus_mapping.pkl')
-    species_map = pd.read_pickle(database+'/species_mapping.pkl')
-
-    model = build_mlp(True,embedding_matrix,max_len,kmer_size,'accuracy',
-        classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+    #species_map = pd.read_pickle(database+'/species_mapping.pkl')
+    if model_path.split('/')[-1] == 'MLP_SK.hdfs':
+        model = build_mlp(True,embedding_matrix,max_len,kmer_size,'accuracy',classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+    elif model_path.split('/')[-1] == 'MLP_GRU.hdfs':
+        model = build_gru(True,embedding_matrix,max_len,kmer_size,'accuracy',classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+    else:
+        model = build_resnet(True,embedding_matrix,max_len,kmer_size,'accuracy',classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+    
     model.load_weights(model_path)
 
     for file in files_list:
@@ -88,21 +92,17 @@ def batch_predict(dir_path,model_param_path,model_path,database,output_dir):
         X = pad_sequences(df['encoded'].values,maxlen= max_len)
         X = array(np.concatenate(X).reshape(X.shape[0],max_len).tolist()).astype('uint16')
         # Begin prediction
-        y_1,y_2,y_3,y_4,y_5,y_6 = model.predict(X)
-        df['phylum-'],df['class_-'],df['order-'],df['family-'],df['genus-'],df['species-'] = y_1.argmax(axis=-1) , y_2.argmax(axis=-1) , y_3.argmax(axis=-1) , y_4.argmax(axis=-1) , y_5.argmax(axis=-1) , y_6.argmax(axis=-1)
-        df['phylum'] = df['phylum-'].apply(lambda x : phylum_map[x])
+        y_1,y_2,y_3,y_4,y_5 = model.predict(X)
+        df['phylum'],df['class_'],df['order'],df['family'],df['genus'] = y_1.argmax(axis=-1) , y_2.argmax(axis=-1) , y_3.argmax(axis=-1) , y_4.argmax(axis=-1) , y_5.argmax(axis=-1)
+
+        df['phylum'] = df['phylum'].apply(lambda x : phylum_map[x])
+        df['class'] = df['class_'].apply(lambda x : class_map[x])
+        df['order'] = df['order'].apply(lambda x : order_map[x])
+        df['family'] = df['family'].apply(lambda x : family_map[x])
+        df['genus'] = df['genus'].apply(lambda x : genus_map[x])
+        #df['species'] = df['species'].apply(lambda x : species_map[x])
         
-        df['class'] = df['class_-'].apply(lambda x : class_map[x])
-        
-        df['order'] = df['order-'].apply(lambda x : order_map[x])
-        
-        df['family'] = df['family-'].apply(lambda x : family_map[x])
-        
-        df['genus'] = df['genus-'].apply(lambda x : genus_map[x])
-        
-        df['species'] = df['phylum-'].apply(lambda x : species_map[x])
-        
-        df = df.drop(columns=['ambiguity_count','seq-','encoded','phylum-','class_-','order-','family-','genus-','species-'])
+        df = df.drop(columns=['ambiguity_count','seq-','encoded'])
         df.to_csv(output_dir+'/'+file+'_SpeciesMLP_taxonomy.csv')
 
 batch_predict(dir_path,model_param_path,model_path,database,output_dir)
