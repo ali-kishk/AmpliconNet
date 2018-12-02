@@ -1,4 +1,4 @@
-### SpeciesMLP: 
+### AmpliconNet: 
 ### SpeciesMLP: Sequence based Multi-layer Perceptron for Amplicon Read Classification Using Real-time Data Augmentation
 #### Ali Kishk, Mohamed El-Hadidi
 #### bioRxiv 419846; doi: https://doi.org/10.1101/419846
