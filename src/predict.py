@@ -46,6 +46,9 @@ def read_fastq(file_path):
     df = pd.DataFrame(reads,columns=['id','seq'])
     return df
 
+def map_prob(df,y_5):
+    return y_5[df['index'],df['genus']]
+
 def batch_predict(dir_path,model_param_path,model_path,database,output_dir):
     files_list =  np.sort(os.listdir(path=dir_path)).tolist()
     embedding_matrix = 0
@@ -88,21 +91,28 @@ def batch_predict(dir_path,model_param_path,model_path,database,output_dir):
         df = df.drop(columns=['seq'])
         # Applying encoding
         df['encoded'] = df['seq-'].apply(encode_nu)
+        df['encoded'] = df['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
         #Padding sequences
         X = pad_sequences(df['encoded'].values,maxlen= max_len)
         X = array(np.concatenate(X).reshape(X.shape[0],max_len).tolist()).astype('uint16')
         # Begin prediction
-        y_1,y_2,y_3,y_4,y_5 = model.predict(X)
-        df['phylum'],df['class_'],df['order'],df['family'],df['genus'] = y_1.argmax(axis=-1) , y_2.argmax(axis=-1) , y_3.argmax(axis=-1) , y_4.argmax(axis=-1) , y_5.argmax(axis=-1)
-
+        y_1,y_2,y_3,y_4,y_5 = model.predict(X,batch_size=250)
+        df['phylum'],df['class'],df['order'],df['family'],df['genus'] = y_1.argmax(axis=-1) , y_2.argmax(axis=-1) , y_3.argmax(axis=-1) , y_4.argmax(axis=-1) , y_5.argmax(axis=-1)
+        #Mapping the prediction probability for the genus level
+        df['index'] = df.index
+        df['genus_prob'] = df.apply(lambda row:map_prob(row,y_5),axis=1)
+        df = df.sort_values(by=['genus_prob'],ascending=False)
+        df = df.drop(columns=['index'])
+        #Mapping the classes names from the pkl files
         df['phylum'] = df['phylum'].apply(lambda x : phylum_map[x])
-        df['class'] = df['class_'].apply(lambda x : class_map[x])
+        df['class'] = df['class'].apply(lambda x : class_map[x])
         df['order'] = df['order'].apply(lambda x : order_map[x])
         df['family'] = df['family'].apply(lambda x : family_map[x])
         df['genus'] = df['genus'].apply(lambda x : genus_map[x])
         #df['species'] = df['species'].apply(lambda x : species_map[x])
         
         df = df.drop(columns=['ambiguity_count','seq-','encoded'])
-        df.to_csv(output_dir+'/'+file+'_SpeciesMLP_taxonomy.csv')
+        df.to_csv(output_dir+'/'+file+'_AmpliconNet_taxonomy.csv')
+
 
 batch_predict(dir_path,model_param_path,model_path,database,output_dir)

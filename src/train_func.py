@@ -432,7 +432,7 @@ def build_resnet(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
 
 def build_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    inp = Input(shape=(int(max_len),),dtype='uint16')
+    inp = Input(shape=(max_len,),dtype='uint16')
     max_features = 4**kmer_size +1
 
     if Traniable_embedding ==True:
