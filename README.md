@@ -26,7 +26,7 @@ and 10 times in prediction.
 ## In prediction
 
 ```bash
-python src/predict --dir_path INPUT_FASTQ_DIR  --database V46 --output_dir OUTPUT_DIRECTORY --model_path V46/models/MLP_SK.hdfs
+python src/predict --dir_path INPUT_FASTQ_DIR  --database models/V46 --output_dir OUTPUT_DIRECTORY --model_path models/V46/models/MLP_SK.hdfs
 
 ```
 Database have to be changed according the HVR primersof the study
@@ -42,11 +42,11 @@ python src/Predict_Taxonomy_Table.py --pred_dir PREV_PRED_DIR --target_rank genu
 ```bash
 python src/SILVA_header_2_csv.py --silva_path SILVA_132_SSURef_tax_silva.fasta  --silva_header SILVA_header_All_Taxa.csv
 
-python src/preprocess.py --hvr_database V2_SILVA.fa --silva_header SILVA_header_All_Taxa.csv --output_dir V2
+python src/preprocess.py --hvr_database V2_SILVA.fa --silva_header SILVA_header_All_Taxa.csv --output_dir models/V2
 
-python src/train.py --database_dir V2 --kmer_size 6  --batch_size 250 --training_mode mlp_sk
+python src/train.py --database_dir models/V2 --kmer_size 6  --batch_size 250 --training_mode mlp_sk
 
-python src/evaluate.py --database_dir V2 --kmer_size 6 --batch_size 250  --training_mode mlp_sk
+python src/evaluate.py --database_dir models/V2 --kmer_size 6 --batch_size 250  --training_mode mlp_sk
 ```
 
 ## License
