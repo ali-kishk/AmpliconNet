@@ -75,7 +75,10 @@ def evaluate_multioutput_on_different_length(model, lengths,data,batch_size,save
     data = data.iloc[:num_steps*batch_size,:]
     metrics = ['f1', 'precision','recall']
 
-    eval_df =  pd.DataFrame(np.zeros((5,len(lengths))),columns=lengths,index=['Phylum','Order','Class','Family','Genus'])
+    eval_df_1 =  pd.DataFrame(np.zeros((5,len(lengths))),columns=lengths,index=['Phylum','Order','Class','Family','Genus'])
+    eval_df_2 =  pd.DataFrame(np.zeros((5,len(lengths))),columns=lengths,index=['Phylum','Order','Class','Family','Genus'])
+    eval_df_3 =  pd.DataFrame(np.zeros((5,len(lengths))),columns=lengths,index=['Phylum','Order','Class','Family','Genus'])
+
     y_sim_1,y_sim_2,y_sim_3 = data['phylum'].values,data['class_'].values,data['order'].values
     y_sim_4,y_sim_5 = data['family'].values,data['genus'].values
     for len_ in range(len(lengths[:-1])):
@@ -86,12 +89,15 @@ def evaluate_multioutput_on_different_length(model, lengths,data,batch_size,save
             y_pred = [y_1,y_2,y_3,y_4,y_5][i].argmax(axis = -1).astype('uint16')
             for metric in metrics:
                 if metric == 'f1':
-                    eval_df.iloc[i,len_] = f1_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                    eval_df_1.iloc[i,len_] = f1_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                    eval_df_1.to_csv(save_path+'_'+str(metric)+'.csv')  
                 elif metric == 'precision':
-                    eval_df.iloc[i,len_] = precision_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                    eval_df_2.iloc[i,len_] = precision_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                    eval_df_2.to_csv(save_path+'_'+str(metric)+'.csv')  
+                
                 else:
-                    eval_df.iloc[i,len_] = recall_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
-                eval_df.to_csv(save_path+'_'+str(metric)+'.csv')  
+                    eval_df_3.iloc[i,len_] = recall_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                    eval_df_3.to_csv(save_path+'_'+str(metric)+'.csv')  
 
     #prediting on the full length
     data['simulated'] = pad_sequences(data['encoded'].values,maxlen=max_len).tolist()
@@ -102,29 +108,29 @@ def evaluate_multioutput_on_different_length(model, lengths,data,batch_size,save
         y_pred = [y_1,y_2,y_3,y_4,y_5][i].argmax(axis = -1).astype('uint16')
         for metric in metrics:
             if metric == 'f1':
-                eval_df.iloc[i,len_] = f1_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                eval_df_1.iloc[i,-1] = f1_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                eval_df_1.to_csv(save_path+'_'+str(metric)+'.csv')  
             elif metric == 'precision':
-                eval_df.iloc[i,len_] = precision_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                eval_df_2.iloc[i,-1] = precision_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                eval_df_2.to_csv(save_path+'_'+str(metric)+'.csv')  
             else:
-                eval_df.iloc[i,len_] = recall_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
-            eval_df.to_csv(save_path+'_'+str(metric)+'.csv')  
-   
-            #eval_df.to_csv(save_path+'_'+str(metric)+'.csv')  
-    return eval_df
-
+                eval_df_3.iloc[i,-1] = recall_score([y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5][i], y_pred,average='micro')
+                eval_df_3.to_csv(save_path+'_'+str(metric)+'.csv')  
+    return eval_df_1,eval_df_2,eval_df_3
+            
 def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    test  = pd.read_pickle(database+'/test.pkl')
-    test  = test.sample(frac=1).reset_index(drop=True)
-    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+    ## test  = pd.read_pickle(database+'/test.pkl')
+    ## test  = test.sample(frac=1).reset_index(drop=True)
+    test['encoded'] = test['encoded'].apply(lambda x: oneHotEncoding_to_kmers(encoded_list=x,kmer_size=kmer_size,word_to_int = word_to_int)).values.tolist()
 
     for x in range(len(input_types)):
 
         if input_types[x] == 'ResNet_SK':
 
             #ResNet_DC_No_W2V
-            test  = pd.read_pickle(database+'/test.pkl')
-            test  = test.sample(frac=1).reset_index(drop=True)
+            ## test  = pd.read_pickle(database+'/test.pkl')
+            ## test  = test.sample(frac=1).reset_index(drop=True)
 
             model = build_resnet(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_DC_No_W2V.hdfs')
@@ -153,8 +159,8 @@ def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,km
 
         elif input_types[x] == 'ResNet_DC_W2V':
             #ResNet_DC_W2V
-            test  = pd.read_pickle(database+'/test.pkl')
-            test  = test.sample(frac=1).reset_index(drop=True)
+            ## test  = pd.read_pickle(database+'/test.pkl')
+            ## test  = test.sample(frac=1).reset_index(drop=True)
 
             model = build_resnet(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/ResNet_DC_W2V.hdfs')
@@ -172,16 +178,16 @@ def evaluate_ResNet_models(input_types,test,database,embedding_matrix,max_len,km
 
 def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    test  = pd.read_pickle(database+'/test.pkl')
-    test  = test.sample(frac=1).reset_index(drop=True)
-    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+    ## test  = pd.read_pickle(database+'/test.pkl')
+    ## test  = test.sample(frac=1).reset_index(drop=True)
+    test['encoded'] = test['encoded'].apply(lambda x: oneHotEncoding_to_kmers(encoded_list=x,kmer_size=kmer_size,word_to_int = word_to_int)).values.tolist()
 
     for x in range(len(input_types)):
 
         if input_types[x] == 'MLP_SK':
             #MLP_DC_No_W2V
-            test  = pd.read_pickle(database+'/test.pkl')
-            test  = test.sample(frac=1).reset_index(drop=True)
+            ## test  = pd.read_pickle(database+'/test.pkl')
+            ## test  = test.sample(frac=1).reset_index(drop=True)
 
             model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_DC_No_W2V.hdfs')
@@ -212,8 +218,8 @@ def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_
 
         elif input_types[x] == 'MLP_DC_W2V':
             #MLP_DC_W2V
-            test  = pd.read_pickle(database+'/test.pkl')
-            test  = test.sample(frac=1).reset_index(drop=True)
+            ## test  = pd.read_pickle(database+'/test.pkl')
+            ## test  = test.sample(frac=1).reset_index(drop=True)
 
             model = build_mlp(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/MLP_DC_W2V.hdfs')
@@ -228,16 +234,16 @@ def evaluate_MLP_models(input_types,test,database,embedding_matrix,max_len,kmer_
 
 def evaluate_GRU_models(input_types,test,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    test  = pd.read_pickle(database+'/test.pkl')
-    test  = test.sample(frac=1).reset_index(drop=True)
-    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+    ## test  = pd.read_pickle(database+'/test.pkl')
+    ## test  = test.sample(frac=1).reset_index(drop=True)
+    test['encoded'] = test['encoded'].apply(lambda x: oneHotEncoding_to_kmers(encoded_list=x,kmer_size=kmer_size,word_to_int = word_to_int)).values.tolist()
 
     for x in range(len(input_types)):
 
         if input_types[x] == 'GRU_SK':
             #GRU_DC_No_W2V
-            test  = pd.read_pickle(database+'/test.pkl')
-            test  = test.sample(frac=1).reset_index(drop=True)
+            ## test  = pd.read_pickle(database+'/test.pkl')
+            ## test  = test.sample(frac=1).reset_index(drop=True)
 
             model = build_gru(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/GRU_DC_No_W2V.hdfs')
@@ -268,8 +274,8 @@ def evaluate_GRU_models(input_types,test,database,embedding_matrix,max_len,kmer_
 
         elif input_types[x] == 'GRU_DC_W2V':
             #GRU_DC_W2V
-            test  = pd.read_pickle(database+'/test.pkl')
-            test  = test.sample(frac=1).reset_index(drop=True)
+            ## test  = pd.read_pickle(database+'/test.pkl')
+            ## test  = test.sample(frac=1).reset_index(drop=True)
 
             model = build_gru(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             model.load_weights(database+'/models/GRU_DC_W2V.hdfs')
@@ -286,9 +292,9 @@ def evaluate_GRU_models(input_types,test,database,embedding_matrix,max_len,kmer_
 
 def evaluate_mlp_only(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    test  = pd.read_pickle(database+'/test.pkl')
-    test  = test.sample(frac=1).reset_index(drop=True)
-    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+    ### test  = pd.read_pickle(database+'/test.pkl')
+    ### test  = test.sample(frac=1).reset_index(drop=True)
+    #test['encoded'] = test['encoded'].apply(lambda x: oneHotEncoding_to_kmers(encoded_list=x,kmer_size=kmer_size,word_to_int = word_to_int)).values.tolist()
 
     #MLP SK
     model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,
@@ -301,9 +307,9 @@ def evaluate_mlp_only(database,embedding_matrix,max_len,kmer_size,metrics,test,b
 
 def evaluate_gru_only(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    test  = pd.read_pickle(database+'/test.pkl')
-    test  = test.sample(frac=1).reset_index(drop=True)
-    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+    ## test  = pd.read_pickle(database+'/test.pkl')
+    ## test  = test.sample(frac=1).reset_index(drop=True)
+    test['encoded'] = test['encoded'].apply(lambda x: oneHotEncoding_to_kmers(encoded_list=x,kmer_size=kmer_size,word_to_int = word_to_int)).values.tolist()
 
     #MLP SK
     model = build_gru(True,embedding_matrix,max_len,kmer_size,metrics,
@@ -316,9 +322,9 @@ def evaluate_gru_only(database,embedding_matrix,max_len,kmer_size,metrics,test,b
 
 def evaluate_resnet_only(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    test  = pd.read_pickle(database+'/test.pkl')
-    test  = test.sample(frac=1).reset_index(drop=True)
-    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+    ## test  = pd.read_pickle(database+'/test.pkl')
+    ## test  = test.sample(frac=1).reset_index(drop=True)
+    #test['encoded'] = test['encoded'].apply(lambda x: oneHotEncoding_to_kmers(encoded_list=x,kmer_size=kmer_size,word_to_int = word_to_int)).values.tolist()
 
     #MLP SK
     model = build_resnet(True,embedding_matrix,max_len,kmer_size,metrics,
@@ -364,9 +370,9 @@ def evaluate_multitask_on_different_length(model, lengths,data,batch_size,save_p
 #Evaluation is based on AUC
 def evaluate_multi_task(database,embedding_matrix,max_len,kmer_size,metrics,test,batch_size,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
-    test  = pd.read_pickle(database+'/test.pkl')
-    test  = test.sample(frac=1).reset_index(drop=True)
-    test['encoded'] = test['encoded'].apply(lambda  x: oneHotEncoding_to_kmers(x,kmer_size=kmer_size)).values.tolist()
+    ## test  = pd.read_pickle(database+'/test.pkl')
+    ## test  = test.sample(frac=1).reset_index(drop=True)
+    test['encoded'] = test['encoded'].apply(lambda x: oneHotEncoding_to_kmers(encoded_list=x,kmer_size=kmer_size,word_to_int = word_to_int)).values.tolist()
 
     #MLP SK
     model = build_multitask_mlp(True,embedding_matrix,max_len,kmer_size,metrics,

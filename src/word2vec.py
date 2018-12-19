@@ -13,7 +13,7 @@ from train_func import oneHotEncoding_to_kmers
 
 import argparse
 
-parser = argparse.ArgumentParser(description='SpeciesMLP: 16S rRNA taxonomic classifier using deep learning')
+parser = argparse.ArgumentParser(description='AmpliconNet: Sequence Based Multi-layer Perceptron for Amplicon Read Classifier')
 
 parser.add_argument('--database_dir', dest='database_dir',type=str, default='.', help='Input directory contains train, test & valid data')
 parser.add_argument('--kmer_size', dest='kmer_size', type=int, default=6, help='kmer size to convert the sequence of reads to sequence of kmers')

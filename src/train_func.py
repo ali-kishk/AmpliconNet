@@ -6,6 +6,8 @@ from numpy.random import randint
 
 import keras
 import random
+import tensorflow as tf
+
 from keras.callbacks import Callback
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.metrics import r2_score, accuracy_score
@@ -26,6 +28,7 @@ from keras.regularizers import *
 from keras import regularizers
 from keras.layers import concatenate as concatLayer
 from keras.utils import plot_model
+import os
 #from ._conv import register_converters as _register_converters
 
 
@@ -36,29 +39,39 @@ from itertools import product
 
 from gensim.models import KeyedVectors
 
-kmer_size = 6
 vector_size = 128
-max_features = 4**kmer_size + 1
-bases=['1','2','3','4']
-all_kmers = [''.join(p) for p in itertools.product(bases, repeat=kmer_size)]
-word_to_int = dict()
-word_to_int = word_to_int.fromkeys(all_kmers)
-keys = range(1,len(all_kmers)+1)
-for k in keys:
-    word_to_int[all_kmers[k-1]] = keys[k-1]
+max_features = (6**4) +1
+def get_word_to_int(kmer_size):
+	bases=['1','2','3','4']
+	all_kmers = [''.join(p) for p in itertools.product(bases, repeat=kmer_size)]
+	word_to_int = dict()
+	word_to_int = word_to_int.fromkeys(all_kmers)
+	keys = range(1,len(all_kmers)+1)
+	for k in keys:
+	    word_to_int[all_kmers[k-1]] = keys[k-1]
+	return word_to_int
 
 # Creating embedding matrix from the word2vec model
 def build_embedding_matrix(model_path,word_to_int):
     word2vec = KeyedVectors.load_word2vec_format(model_path)
+    #max_features = kmer_size**4 + 1
     embedding_matrix = np.zeros((max_features,vector_size))
     for i in word_to_int.values():
         embedding_matrix[i,:] = word2vec.wv[str(i)]
     return embedding_matrix
 
 # Convert the sequence of chracters to sequence of kmers
-def oneHotEncoding_to_kmers(encoded_list,kmer_size):
+def oneHotEncoding_to_kmers(encoded_list,kmer_size,word_to_int):
     word_list = []
     ch_str = str(encoded_list.tolist()).replace(',','').replace('[','').replace(']','').replace(' ','')
+    for i in range(len(ch_str) - kmer_size + 1):
+        word_list.append(int(word_to_int[ch_str[ i : i + kmer_size ]]))
+    return word_list
+
+# Convert the sequence of chracters to sequence of kmers
+def oneHotEncoding_to_kmers_csv(encoded_list,kmer_size,word_to_int):
+    word_list = []
+    ch_str = str(encoded_list).replace('\n','').replace('[','').replace(']','').replace(' ','')
     for i in range(len(ch_str) - kmer_size + 1):
         word_list.append(int(word_to_int[ch_str[ i : i + kmer_size ]]))
     return word_list
@@ -76,39 +89,91 @@ def simulate_reads_range(list1,min_len):
     return list1[start:end]
 
 # A generator function of a variable length subsequence that changes in each epoch
-def simulate_ngs_generator(df,len1 ,batch_size,max_len):
-    y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5 = df['phylum'].values,df['class_'].values,df['order'].values,df['family'].values,df['genus'].values
+def simulate_ngs_generator(df,len1 ,batch_size,max_len,kmer_size,save_mem):
     #if classes_6 != 0:
     #    y_sim_6 = df['species-'].values
-    
-    x_sim = df['encoded'].apply(lambda x : simulate_reads_range(x,min_len=len1))
-    x_sim = pad_sequences(x_sim.values,maxlen=max_len)
-    x_sim = array(np.concatenate(x_sim).reshape(x_sim.shape[0],max_len).tolist()).astype('uint16')
-    samples_per_epoch = df.shape[0]
-    number_of_batches = samples_per_epoch//batch_size
-    counter=0
+    word_to_int = get_word_to_int(kmer_size)
+    if save_mem == False:
+        y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5 = df['phylum'].values,df['class_'].values,df['order'].values,df['family'].values,df['genus'].values
+        x_sim = df['encoded'].apply(lambda x : simulate_reads_range(x,min_len=len1))
+        x_sim = pad_sequences(x_sim.values,maxlen=max_len)
+        x_sim = array(np.concatenate(x_sim).reshape(x_sim.shape[0],max_len).tolist()).astype('uint16')
+        samples_per_epoch = df.shape[0]
+        number_of_batches = samples_per_epoch//batch_size
+        counter=0
 
-    while counter <=number_of_batches :
-        X_batch = np.array(x_sim[batch_size*counter:batch_size*(counter+1)]).astype('uint16')
-        y_1 = y_sim_1[batch_size*counter:batch_size*(counter+1)].astype('uint8')
-        y_2 = y_sim_2[batch_size*counter:batch_size*(counter+1)].astype('uint8')
-        y_3 = y_sim_3[batch_size*counter:batch_size*(counter+1)].astype('uint8')
-        y_4 = y_sim_4[batch_size*counter:batch_size*(counter+1)].astype('uint16')
-        y_5 = y_sim_5[batch_size*counter:batch_size*(counter+1)].astype('uint16')
-        #if classes_6 != 0:
-        #    y_6 = y_sim_6[batch_size*counter:batch_size*(counter+1)].astype('uint16')
-        counter += 1
-        if counter ==number_of_batches:
-            counter = 0
-            del x_sim,  y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5
-            y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5 = df['phylum'].values,df['class_'].values,df['order'].values,df['family'].values,df['genus'].values
+        while counter <=number_of_batches :
+            X_batch = np.array(x_sim[batch_size*counter:batch_size*(counter+1)]).astype('uint16')
+            y_1 = y_sim_1[batch_size*counter:batch_size*(counter+1)].astype('uint8')
+            y_2 = y_sim_2[batch_size*counter:batch_size*(counter+1)].astype('uint8')
+            y_3 = y_sim_3[batch_size*counter:batch_size*(counter+1)].astype('uint8')
+            y_4 = y_sim_4[batch_size*counter:batch_size*(counter+1)].astype('uint16')
+            y_5 = y_sim_5[batch_size*counter:batch_size*(counter+1)].astype('uint16')
             #if classes_6 != 0:
-            #    y_sim_6 = df['species-'].values
+            #    y_6 = y_sim_6[batch_size*counter:batch_size*(counter+1)].astype('uint16')
+            counter += 1
+            if counter ==number_of_batches:
+                counter = 0
+                del x_sim,  y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5
+                y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5 = df['phylum'].values,df['class_'].values,df['order'].values,df['family'].values,df['genus'].values
+                #if classes_6 != 0:
+                #    y_sim_6 = df['species-'].values
 
-            x_sim = df['encoded'].apply(lambda x : simulate_reads_range(x,min_len=len1))
+                x_sim = df['encoded'].apply(lambda x : simulate_reads_range(x,min_len=len1))
+                x_sim = pad_sequences(x_sim.values,maxlen=max_len)
+                x_sim = array(np.concatenate(x_sim).reshape(x_sim.shape[0],max_len).tolist()).astype('uint16')
+            yield X_batch, [y_1,y_2,y_3,y_4,y_5]
+    
+    else:
+        path = df
+        #samples_per_epoch = sum(1 for line in open(path))
+        df = pd.read_csv(path)#,chunksize=[batch_size*counter:batch_size*(counter+1)])
+        df['len'] = df['encoded'].apply(lambda x: len(x))
+        df = df.sample(frac=1).reset_index(drop=True)
+        df = df[df['len']>len1]
+        samples_per_epoch = df.shape[0]
+        y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5 = df['phylum'].values,df['class_'].values,df['order'].values,df['family'].values,df['genus'].values
+    
+        number_of_batches = samples_per_epoch//batch_size
+        counter=0
+
+        while counter <=number_of_batches :
+            # many lines were inteded to load from the disk rather saving memory
+            #df = pd.read_csv(path,chunksize=[batch_size*counter:batch_size*(counter+1)])
+            #y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5 = df['phylum'].values,df['class_'].values,df['order'].values,df['family'].values,df['genus'].values
+            df2 = df.iloc[batch_size*counter:batch_size*(counter+1),:]
+            df2['encoded_'] = df2['encoded'].apply(lambda x: oneHotEncoding_to_kmers_csv(encoded_list=x,
+            	kmer_size=kmer_size,word_to_int = word_to_int)).values.tolist()
+            x_sim = df2['encoded_'].apply(lambda x : simulate_reads_range(x,min_len=len1))
             x_sim = pad_sequences(x_sim.values,maxlen=max_len)
-            x_sim = array(np.concatenate(x_sim).reshape(x_sim.shape[0],max_len).tolist()).astype('uint16')
-        yield X_batch, [y_1,y_2,y_3,y_4,y_5]
+            X_batch = array(np.concatenate(x_sim).reshape(x_sim.shape[0],max_len).tolist()).astype('uint16')
+            y_1 = y_sim_1[batch_size*counter:batch_size*(counter+1)].astype('uint8')
+            y_2 = y_sim_2[batch_size*counter:batch_size*(counter+1)].astype('uint8')
+            y_3 = y_sim_3[batch_size*counter:batch_size*(counter+1)].astype('uint8')
+            y_4 = y_sim_4[batch_size*counter:batch_size*(counter+1)].astype('uint16')
+            y_5 = y_sim_5[batch_size*counter:batch_size*(counter+1)].astype('uint16')
+            #if classes_6 != 0:
+            #    y_6 = y_sim_6[batch_size*counter:batch_size*(counter+1)].astype('uint16')
+            counter += 1
+            if counter ==number_of_batches:
+                counter = 0
+                del x_sim,df2,X_batch
+                #if cl560475asses_6 != 0:38/
+                #    y_sim_6 = df['species-'].values
+                #df = pd.read_csv(path,chunksize=[batch_size*counter:batch_size*(counter+1)])
+                #y_sim_1,y_sim_2,y_sim_3,y_sim_4,y_sim_5 = df['phylum'].values,df['class_'].values,df['order'].values,df['family'].values,df['genus'].values
+                df2 = df.iloc[batch_size*counter:batch_size*(counter+1),:]
+                df2['encoded_'] = df2['encoded'].apply(lambda x: oneHotEncoding_to_kmers_csv(encoded_list=x,
+                	kmer_size=kmer_size,word_to_int = word_to_int)).values.tolist()
+                x_sim = df2['encoded_'].apply(lambda x : simulate_reads_range(x,min_len=len1))
+                x_sim = pad_sequences(x_sim.values,maxlen=max_len)
+                X_batch = array(np.concatenate(x_sim).reshape(x_sim.shape[0],max_len).tolist()).astype('uint16')
+                y_1 = y_sim_1[batch_size*counter:batch_size*(counter+1)].astype('uint8')
+                y_2 = y_sim_2[batch_size*counter:batch_size*(counter+1)].astype('uint8')
+                y_3 = y_sim_3[batch_size*counter:batch_size*(counter+1)].astype('uint8')
+                y_4 = y_sim_4[batch_size*counter:batch_size*(counter+1)].astype('uint16')
+                y_5 = y_sim_5[batch_size*counter:batch_size*(counter+1)].astype('uint16')
+            yield X_batch, [y_1,y_2,y_3,y_4,y_5]
 
 # A generator function of a fixed length subsequence that changes in each epoch
 def simulate_ngs_generator_fixed_len(df,len1,batch_size,max_len):
@@ -467,6 +532,7 @@ def build_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
     model.compile(loss='sparse_categorical_crossentropy',optimizer=optimizer,metrics=[metrics])
     return model
 
+
 def build_gru(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
     inp = Input(shape=(max_len,),dtype='uint16')
@@ -477,13 +543,13 @@ def build_gru(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
     else:
         main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
     
-    main = Bidirectional(GRU(32, return_sequences=True))(main)
-    #attention = AttentionDecoder(8, 5)(encoder)
+    main = Bidirectional(GRU(16, return_sequences=True))(main)
+    #main = AttentionDecoder(8, 5)(main)
     main = Attention_layer()(main)
-    main = Dense(128)(main)
+    main = Dense(64)(main)
     #main = GlobalMaxPool1D()(main)
     main = Dropout(0.25)(main)
-    main = Dense(512)(main)  
+    main = Dense(128)(main)  
     main = Dropout(0.25)(main)
     out1 = Dense(classes_1,activation='softmax')(main)
     out2 = Dense(classes_2,activation='softmax')(main)
@@ -530,7 +596,37 @@ def build_multitask_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,m
     model.compile(loss=multitask_loss,optimizer=optimizer,metrics=[metrics])
     return model
 
+def build_tpu_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
+    classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
+    from tensorflow.python.keras.layers import Input, GlobalMaxPool1D, Dense, Embedding,Dropout
+    inp = Input(shape=(max_len,),dtype='int32')
+    max_features = 4**kmer_size +1
+    main = Embedding(max_features, 128)(inp)
+    main = Dense(512)(main)
+    main = GlobalMaxPool1D()(main)
+    main = Dropout(0.25)(main)
+    main = Dense(512)(main)  
+    main = Dropout(0.25)(main)
+    out1 = Dense(classes_1,activation='softmax')(main)
+    out2 = Dense(classes_2,activation='softmax')(main)
+    out3 = Dense(classes_3,activation='softmax')(main)
+    out4 = Dense(classes_4,activation='softmax')(main)
+    out5 = Dense(classes_5,activation='softmax')(main)
+        
+    model_ = tf.keras.Model(inputs=[inp], outputs=[out1,out2,out3,out4,out5])
+    #optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
+    #model.compile(loss='sparse_categorical_crossentropy',optimizer=optimizer,metrics=[metrics])
+    model_.compile(optimizer=tf.train.AdamOptimizer(learning_rate=0.001),loss='sparse_categorical_crossentropy',metrics=['acc'])
+    # This address identifies the TPU we'll use when configuring TensorFlow.
+    TPU_WORKER = 'grpc://' + os.environ['COLAB_TPU_ADDR']
+    tf.logging.set_verbosity(tf.logging.INFO)
 
+    model = tf.contrib.tpu.keras_to_tpu_model(
+        model_,
+        strategy=tf.contrib.tpu.TPUDistributionStrategy(
+            tf.contrib.cluster_resolver.TPUClusterResolver(TPU_WORKER)))
+
+    return model
 
 ## Attention Implementation in Keras by https://github.com/BITDM/bitdm.github.io
 from keras import backend as K

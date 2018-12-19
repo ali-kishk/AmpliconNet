@@ -12,6 +12,8 @@ from numpy.random import randint
 import random
 
 from sklearn.metrics import r2_score, accuracy_score
+import tensorflow as tf
+from tensorflow.python.keras.layers import Input, GlobalMaxPool1D, Dense, Embedding,Dropout
 
 from keras.utils import to_categorical
 from keras.preprocessing.sequence import pad_sequences
@@ -54,8 +56,8 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/ResNet_DC_No_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -73,8 +75,8 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/ResNet_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -128,8 +130,8 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/ResNet_DC_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -144,8 +146,8 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/ResNet_SK.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -172,8 +174,8 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/MLP_DC_No_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -188,8 +190,8 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/MLP_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -244,8 +246,8 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/MLP_DC_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -259,8 +261,8 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/MLP_SK.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -287,8 +289,8 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/GRU_DC_No_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -303,8 +305,8 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/GRU_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -359,8 +361,8 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/GRU_DC_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -375,8 +377,8 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/GRU_SK.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
             model.fit_generator(train_generator,
                                 epochs=50,shuffle=True,
                                 steps_per_epoch=train.shape[0]//batch_size,
@@ -386,29 +388,40 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
 
 
 
-def train_mlp_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,
+def train_mlp_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
     #MLP SK
-    print(max_len)
-    model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
-    filepath = ''.join(database+'/models/MLP_SK.hdfs')
-    Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
-    csv_logger = CSVLogger(database+'/log/MLP_SK.log')
+    if tpu ==True:
+        model = build_tpu_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+    else:
+        model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+
     if load_mode ==True:
         model.load_weights(database+'/models/MLP_SK.hdfs')
     else:
         pass
+    filepath = ''.join(database+'/models/MLP_SK.hdfs')
+    Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
+    csv_logger = CSVLogger(database+'/log/MLP_SK.log')
+
     EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-    train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-    valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
-    model.fit_generator(train_generator,steps_per_epoch=train.shape[0]//batch_size,
+    vector_size = 128
+    train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+    valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+    if save_mem ==True:
+        steps_per_epoch= pd.read_csv(train).shape[0]//batch_size #sum(1 for line in open(train))//batch_size
+        validation_steps=pd.read_csv(valid).shape[0]//batch_size #sum(1 for line in open(valid))//batch_size
+    else:
+        steps_per_epoch=train.shape[0]//batch_size
+        validation_steps=valid.shape[0]//batch_size
+    model.fit_generator(train_generator,steps_per_epoch=steps_per_epoch,
                         epochs=50,shuffle=True,
                         validation_data=valid_generator,
-                        validation_steps=valid.shape[0]//batch_size,
+                        validation_steps=validation_steps,
                         verbose=1,
                         callbacks=[Checkpoint,csv_logger,EarlyStop])
 
-def train_gru_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,
+def train_gru_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
     #MLP SK
     model = build_gru(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
@@ -420,16 +433,22 @@ def train_gru_only(train,valid,database,embedding_matrix,max_len,kmer_size,metri
     else:
         pass
     EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-    train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-    valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
-    model.fit_generator(train_generator,steps_per_epoch=train.shape[0]//batch_size,
+    train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+    valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+    if save_mem ==True:
+        steps_per_epoch= pd.read_csv(train).shape[0]//batch_size #sum(1 for line in open(train))//batch_size
+        validation_steps=pd.read_csv(valid).shape[0]//batch_size #sum(1 for line in open(valid))//batch_size
+    else:
+        steps_per_epoch=train.shape[0]//batch_size
+        validation_steps=valid.shape[0]//batch_size
+    model.fit_generator(train_generator,steps_per_epoch=steps_per_epoch,
                         epochs=50,shuffle=True,
                         validation_data=valid_generator,
-                        validation_steps=valid.shape[0]//batch_size,
+                        validation_steps=validation_steps,
                         verbose=1,
                         callbacks=[Checkpoint,csv_logger,EarlyStop])
 
-def train_resnet_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,
+def train_resnet_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
     #MLP SK
     model = build_resnet(True,embedding_matrix,max_len,kmer_size,metrics,
@@ -442,12 +461,18 @@ def train_resnet_only(train,valid,database,embedding_matrix,max_len,kmer_size,me
     else:
         pass
     EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
-    train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=50)
-    valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=50)
-    model.fit_generator(train_generator,steps_per_epoch=train.shape[0]//batch_size,
+    train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+    valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+    if save_mem ==True:
+        steps_per_epoch= pd.read_csv(train).shape[0]//batch_size #sum(1 for line in open(train))//batch_size
+        validation_steps=pd.read_csv(valid).shape[0]//batch_size #sum(1 for line in open(valid))//batch_size
+    else:
+        steps_per_epoch=train.shape[0]//batch_size
+        validation_steps=valid.shape[0]//batch_size
+    model.fit_generator(train_generator,steps_per_epoch=steps_per_epoch,
                         epochs=50,shuffle=True,
                         validation_data=valid_generator,
-                        validation_steps=valid.shape[0]//batch_size,
+                        validation_steps=validation_steps,
                         verbose=1,
                         callbacks=[Checkpoint,csv_logger,EarlyStop])
 
