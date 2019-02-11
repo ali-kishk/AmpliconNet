@@ -2,8 +2,8 @@
 
 ## Publication:
 
-AmpliconNet: Sequence Based Multi-layer Perceptron for Amplicon Read Classification Using Real-time Data Augmentation 
-[International Conference on Bioinformatics and Biomedicine 2018 Proceedings "In Press"]
+A. Kishk and M. El-Hadidi, "AmpliconNet: Sequence Based Multi-layer Perceptron for Amplicon Read Classification Using Real-time Data Augmentation," 2018 IEEE International Conference on Bioinformatics and Biomedicine (BIBM), Madrid, Spain, 2018, pp. 2413-2418.
+doi: 10.1109/BIBM.2018.8621287
 
 ## What's Taxonomic classification:
 A nice brief to taxonomic classification by Rob Knight:
