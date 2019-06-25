@@ -18,7 +18,7 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.models import Sequential, Model
 from keras.layers import Concatenate, LeakyReLU, concatenate,GRU, Bidirectional, MaxPool1D,GlobalMaxPool1D,add
 from keras.layers import Dense, Embedding, Input, Masking, Dropout, MaxPooling1D,Lambda, BatchNormalization, Reshape
-from keras.layers import LSTM, TimeDistributed, AveragePooling1D, Flatten,Activation,ZeroPadding1D
+from keras.layers import LSTM, TimeDistributed, AveragePooling1D, Flatten,Activation,ZeroPadding1D,SeparableConv1D, GlobalAveragePooling1D
 from keras.optimizers import Adam, rmsprop
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping,ModelCheckpoint, CSVLogger
 from keras.layers import Conv1D, GlobalMaxPooling1D, ConvLSTM2D, Bidirectional,RepeatVector
@@ -73,7 +73,9 @@ tpu = args.tpu
 model_param_path = args.model_param_path
 save_mem = args.save_mem
 
+# Define the ACGT encoding
 bases=['1','2','3','4']
+#Geneating all kmers for a specific kmer size
 all_kmers = [''.join(p) for p in itertools.product(bases, repeat=kmer_size)]
 word_to_int = dict()
 word_to_int = word_to_int.fromkeys(all_kmers)
@@ -143,34 +145,53 @@ def main():
 # W2V: sequence of kmers with Word2Vec
 
     all_resnet_models = ['ResNet_SK','ResNet_W2V','ResNet_SK_fixed_len','ResNet_W2V_fixed_len','ResNet_DC_W2V','ResNet_DC_No_W2V']
-    all_mlp_models = ['MLP_SK','MLP_W2V','MLP_SK_fixed_len','MLP_W2V_fixed_len','MLP_DC_W2V','MLP_DC_No_W2V']
+    all_mlp_models = ['MLP_W2V','MLP_SK_fixed_len','MLP_W2V_fixed_len','MLP_DC_W2V','MLP_DC_No_W2V']
     all_gru_models = ['GRU_SK','GRU_W2V','GRU_SK_fixed_len','GRU_W2V_fixed_len','GRU_DC_W2V','GRU_DC_No_W2V']
+    #all_mlp_models = ['MLP_SK_fixed_len','MLP_DC_No_W2V']
 
     if search == 'search_mlp':
-        search_MLP_models(all_mlp_models,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
+        search_MLP_models(all_mlp_models,train,valid,database,embedding_matrix,max_len,
+            kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
             classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 
     elif search == 'search_resnet':
-        search_ResNet_models(all_resnet_models,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
+        search_ResNet_models(all_resnet_models,train,valid,database,embedding_matrix,max_len,
+            kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
+            classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+
+    elif search == 'search_sepconv':
+        search_SepConv_models(all_resnet_models,train,valid,database,embedding_matrix,max_len,
+            kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
             classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 
     elif search == 'search_gru':
-        search_GRU_models(all_gru_models,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
+        search_GRU_models(all_gru_models,train,valid,database,embedding_matrix,max_len,
+            kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
             classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 
     elif search == 'mlp_sk':
-        train_mlp_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
+        train_mlp_only(train,valid,database,embedding_matrix,max_len,
+            kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
             classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 
     elif search == 'resnet_sk':
-        train_resnet_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
+        train_resnet_only(train,valid,database,embedding_matrix,max_len,
+            kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
             classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+
+    elif search == 'sepconv_sk':
+        train_sepconv_only(train,valid,database,embedding_matrix,max_len,
+            kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
+            classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+
     elif search == 'gru_sk':
-        train_gru_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
+        train_gru_only(train,valid,database,embedding_matrix,max_len,
+            kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
             classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
 
     elif search == 'multi_task':
-        multi_task_training(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,
+        multi_task_training(train,valid,database,embedding_matrix,max_len,
+            kmer_size,metrics,batch_size,load_mode,
             classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
     else:
         print('Wrong search type ! ')

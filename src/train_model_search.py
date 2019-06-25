@@ -20,7 +20,7 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.models import Sequential, Model
 from keras.layers import Concatenate, LeakyReLU, concatenate,GRU, Bidirectional, MaxPool1D,GlobalMaxPool1D,add
 from keras.layers import Dense, Embedding, Input, Masking, Dropout, MaxPooling1D,Lambda, BatchNormalization, Reshape
-from keras.layers import LSTM, TimeDistributed, AveragePooling1D, Flatten,Activation,ZeroPadding1D
+from keras.layers import LSTM, TimeDistributed, AveragePooling1D, Flatten,Activation,ZeroPadding1D,SeparableConv1D, GlobalAveragePooling1D
 from keras.optimizers import Adam, rmsprop
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping,ModelCheckpoint, CSVLogger
 from keras.layers import Conv1D, GlobalMaxPooling1D, ConvLSTM2D, Bidirectional,RepeatVector
@@ -39,7 +39,7 @@ from train_func import *
 
 #f1_on_all = f1_on_all()
 
-def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
+def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
 
     for x in range(len(input_types)):
@@ -53,6 +53,10 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
 
             model = build_resnet(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/ResNet_DC_No_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/ResNet_DC_No_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -72,6 +76,10 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
             model = build_resnet(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             #model.load_weights(database+'/models/ResNet_W2V.hdfs')
             filepath = ''.join(database+'/models/ResNet_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/ResNet_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -88,6 +96,10 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
             #ResNet_SK_fixed_len
             model = build_resnet(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/ResNet_SK_Fixed_len.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/models/ResNet_SK_Fixed_len.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
@@ -105,6 +117,10 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
             #ResNet_W2V_fixed_len
             model = build_resnet(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/ResNet_SK_Fixed_len.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/models/ResNet_SK_Fixed_len.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
@@ -127,6 +143,10 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
 
             model = build_resnet(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/ResNet_DC_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/ResNet_DC_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -143,6 +163,10 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
             #ResNet SK
             model = build_resnet(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/ResNet_SK.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/ResNet_SK.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -155,7 +179,7 @@ def search_ResNet_models(input_types,train,valid,database,embedding_matrix,max_l
                                 validation_steps=valid.shape[0]//batch_size,
                                 verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
 
-def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
+def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
 
     for x in range(len(input_types)):
@@ -171,6 +195,10 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
 
             model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/MLP_DC_No_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/MLP_DC_No_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -187,6 +215,10 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
             #MLP W2V
             model = build_mlp(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/MLP_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/MLP_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -203,6 +235,10 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
             model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
             filepath = ''.join(database+'/models/MLP_SK_Fixed_len.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/models/MLP_SK_Fixed_len.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
@@ -221,6 +257,10 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
             model = build_mlp(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
             filepath = ''.join(database+'/models/MLP_SK_Fixed_len.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/models/MLP_SK_Fixed_len.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
@@ -243,6 +283,10 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
 
             model = build_mlp(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/MLP_DC_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/MLP_DC_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -258,6 +302,10 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
             #MLP SK
             model = build_mlp(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/MLP_SK.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/MLP_SK.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -271,7 +319,7 @@ def search_MLP_models(input_types,train,valid,database,embedding_matrix,max_len,
                                 verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
 
 
-def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
+def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
 
     for x in range(len(input_types)):
@@ -286,6 +334,10 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
 
             model = build_gru(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/GRU_DC_No_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/GRU_DC_No_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -302,6 +354,10 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
             #GRU W2V
             model = build_gru(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/GRU_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/GRU_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -318,6 +374,10 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
             model = build_gru(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
             filepath = ''.join(database+'/models/GRU_SK_Fixed_len.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/models/GRU_SK_Fixed_len.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
@@ -336,6 +396,10 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
             model = build_gru(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
             filepath = ''.join(database+'/models/GRU_SK_Fixed_len.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/models/GRU_SK_Fixed_len.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
@@ -358,6 +422,10 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
 
             model = build_gru(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/GRU_DC_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/GRU_DC_W2V.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -374,6 +442,10 @@ def search_GRU_models(input_types,train,valid,database,embedding_matrix,max_len,
             #GRU SK
             model = build_gru(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
             filepath = ''.join(database+'/models/GRU_SK.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
             Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
             csv_logger = CSVLogger(database+'/log/GRU_SK.log')
             EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
@@ -420,6 +492,150 @@ def train_mlp_only(train,valid,database,embedding_matrix,max_len,kmer_size,metri
                         validation_steps=validation_steps,
                         verbose=1,
                         callbacks=[Checkpoint,csv_logger,EarlyStop])
+
+def search_SepConv_models(input_types,train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,
+    classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
+
+    for x in range(len(input_types)):
+
+        if input_types[x] == 'SepConv_DC_No_W2V':
+
+            #SepConv_DC_No_W2V
+            valid = pd.read_pickle(database+'/valid.pkl')
+            train = pd.read_pickle(database+'/train.pkl')
+            train = train.sample(frac=1).reset_index(drop=True)
+            valid = valid.sample(frac=1).reset_index(drop=True)
+
+            model = build_sepconv(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            filepath = ''.join(database+'/models/SepConv_DC_No_W2V.hdfs')
+
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
+            Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
+            csv_logger = CSVLogger(database+'/log/SepConv_DC_No_W2V.log')
+            EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            model.fit_generator(train_generator,
+                                epochs=50,shuffle=True,
+                                steps_per_epoch=train.shape[0]//batch_size,
+                                validation_data=valid_generator,
+                                validation_steps=valid.shape[0]//batch_size,
+                                verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
+        elif input_types[x] == 'SepConv_W2V':
+
+            #SepConv W2V
+            model = build_sepconv(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            filepath = ''.join(database+'/models/SepConv_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
+            Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
+            csv_logger = CSVLogger(database+'/log/SepConv_W2V.log')
+            EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            model.fit_generator(train_generator,
+                                epochs=50,shuffle=True,
+                                steps_per_epoch=train.shape[0]//batch_size,
+                                validation_data=valid_generator,
+                                validation_steps=valid.shape[0]//batch_size,
+                                verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
+        elif input_types[x] == 'SepConv_SK_fixed_len':
+            #SepConv_SK_fixed_len
+            model = build_sepconv(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
+            filepath = ''.join(database+'/models/SepConv_SK_Fixed_len.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
+            Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
+            csv_logger = CSVLogger(database+'/models/SepConv_SK_Fixed_len.log')
+            EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
+
+            train_gen = simulate_ngs_generator_fixed_len(train,batch_size=batch_size,max_len=max_len,len1=100)
+            valid_gen = simulate_ngs_generator_fixed_len(valid,batch_size=batch_size,max_len=max_len,len1=100)
+
+            model.fit_generator(train_gen,
+                                epochs=50,shuffle=True,
+                                steps_per_epoch=train.shape[0]//batch_size,
+                                validation_data=valid_gen,
+                                validation_steps=valid.shape[0]//batch_size,
+                                verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
+        elif input_types[x] == 'SepConv_W2V_fixed_len':
+            #SepConv_W2V_fixed_len
+            model = build_sepconv(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            optimizer = AdamW(lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4, epsilon=1e-8, decay=0.)
+            filepath = ''.join(database+'/models/SepConv_SK_Fixed_len.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
+            Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
+            csv_logger = CSVLogger(database+'/models/SepConv_SK_Fixed_len.log')
+            EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
+
+            train_gen = simulate_ngs_generator_fixed_len(train,batch_size=batch_size,max_len=max_len,len1=100)
+            valid_gen = simulate_ngs_generator_fixed_len(valid,batch_size=batch_size,max_len=max_len,len1=100)
+
+            model.fit_generator(train_gen,
+                                epochs=50,shuffle=True,
+                                steps_per_epoch=train.shape[0]//batch_size,
+                                validation_data=valid_gen,
+                                validation_steps=valid.shape[0]//batch_size,
+                                verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
+        elif input_types[x] == 'SepConv_DC_W2V':
+            #SepConv_DC_W2V
+            valid = pd.read_pickle(database+'/valid.pkl')
+            train = pd.read_pickle(database+'/train.pkl')
+            train = train.sample(frac=1).reset_index(drop=True)
+            valid = valid.sample(frac=1).reset_index(drop=True)
+
+            model = build_sepconv(False,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            filepath = ''.join(database+'/models/SepConv_DC_W2V.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
+            Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
+            csv_logger = CSVLogger(database+'/log/SepConv_DC_W2V.log')
+            EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            model.fit_generator(train_generator,
+                                epochs=50,shuffle=True,
+                                steps_per_epoch=train.shape[0]//batch_size,
+                                validation_data=valid_generator,
+                                validation_steps=valid.shape[0]//batch_size,
+                                verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
+        else:
+
+            #SepConv SK
+            model = build_sepconv(True,embedding_matrix,max_len,kmer_size,metrics,classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+            filepath = ''.join(database+'/models/SepConv_SK.hdfs')
+            if load_mode ==True and os.path.isfile(filepath):
+                model.load_weights(filepath)
+            else:
+                pass
+            Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
+            csv_logger = CSVLogger(database+'/log/SepConv_SK.log')
+            EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
+            train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+            model.fit_generator(train_generator,
+                                epochs=50,shuffle=True,
+                                steps_per_epoch=train.shape[0]//batch_size,
+                                validation_data=valid_generator,
+                                validation_steps=valid.shape[0]//batch_size,
+                                verbose=2,callbacks=[Checkpoint,csv_logger,EarlyStop])
 
 def train_gru_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
     classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
@@ -499,6 +715,34 @@ def multi_task_training(train,valid,database,embedding_matrix,max_len,kmer_size,
                         epochs=50,shuffle=True,
                         validation_data=valid_generator,
                         validation_steps=valid.shape[0]//batch_size,
+                        verbose=1,
+                        callbacks=[Checkpoint,csv_logger,EarlyStop])
+
+def train_sepconv_only(train,valid,database,embedding_matrix,max_len,kmer_size,metrics,batch_size,load_mode,tpu,save_mem,min_len,
+    classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
+    #MLP SK
+    model = build_sepconv(True,embedding_matrix,max_len,kmer_size,metrics,
+        classes_1,classes_2,classes_3,classes_4,classes_5,classes_6)
+    filepath = ''.join(database+'/models/SepConv_SK.hdfs')
+    Checkpoint = ModelCheckpoint(filepath,monitor='val_loss', save_best_only=True,save_weights_only=True,period=1)
+    csv_logger = CSVLogger(database+'/log/SepConv_SK.log')
+    if load_mode ==True:
+        model.load_weights(database+'/models/SepConv_SK.hdfs')
+    else:
+        pass
+    EarlyStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto')
+    train_generator = simulate_ngs_generator(train,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+    valid_generator = simulate_ngs_generator(valid,batch_size=batch_size,max_len=max_len,len1=min_len,save_mem=save_mem,kmer_size=kmer_size)
+    if save_mem ==True:
+        steps_per_epoch= pd.read_csv(train).shape[0]//batch_size #sum(1 for line in open(train))//batch_size
+        validation_steps=pd.read_csv(valid).shape[0]//batch_size #sum(1 for line in open(valid))//batch_size
+    else:
+        steps_per_epoch=train.shape[0]//batch_size
+        validation_steps=valid.shape[0]//batch_size
+    model.fit_generator(train_generator,steps_per_epoch=steps_per_epoch,
+                        epochs=50,shuffle=True,
+                        validation_data=valid_generator,
+                        validation_steps=validation_steps,
                         verbose=1,
                         callbacks=[Checkpoint,csv_logger,EarlyStop])
 

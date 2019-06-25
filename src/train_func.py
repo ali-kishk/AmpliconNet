@@ -20,7 +20,7 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.models import Sequential, Model
 from keras.layers import Concatenate, LeakyReLU, concatenate,GRU, Bidirectional, MaxPool1D,GlobalMaxPool1D,add
 from keras.layers import Dense, Embedding, Input, Masking, Dropout, MaxPooling1D,Lambda, BatchNormalization, Reshape
-from keras.layers import LSTM, TimeDistributed, AveragePooling1D, Flatten,Activation,ZeroPadding1D
+from keras.layers import LSTM, TimeDistributed, AveragePooling1D, Flatten,Activation,ZeroPadding1D,SeparableConv1D, GlobalAveragePooling1D
 from keras.optimizers import Adam, rmsprop
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping,ModelCheckpoint, CSVLogger
 from keras.layers import Conv1D, GlobalMaxPooling1D, ConvLSTM2D, Bidirectional,RepeatVector
@@ -40,7 +40,7 @@ from itertools import product
 from gensim.models import KeyedVectors
 
 vector_size = 128
-max_features = (6**4) +1
+max_features = (4**6) +1
 def get_word_to_int(kmer_size):
 	bases=['1','2','3','4']
 	all_kmers = [''.join(p) for p in itertools.product(bases, repeat=kmer_size)]
@@ -54,10 +54,13 @@ def get_word_to_int(kmer_size):
 # Creating embedding matrix from the word2vec model
 def build_embedding_matrix(model_path,word_to_int):
     word2vec = KeyedVectors.load_word2vec_format(model_path)
-    #max_features = kmer_size**4 + 1
+    kmer_size = 6
+    max_features = 4**kmer_size + 1
     embedding_matrix = np.zeros((max_features,vector_size))
     for i in word_to_int.values():
         embedding_matrix[i,:] = word2vec.wv[str(i)]
+    embedding_matrix = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)
+    #embedding_matrix = word2vec.wv.get_keras_embedding(train_embeddings=False)
     return embedding_matrix
 
 # Convert the sequence of chracters to sequence of kmers
@@ -424,7 +427,8 @@ def build_resnet(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
     if Traniable_embedding ==True:
         main = Embedding(5, 128)(inp)
     else:
-        main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
+        #main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
+        main = embedding_matrix(inp)
 
     main = Conv1D(filters=64, kernel_size=3, padding='same')(main)
     i_l1 = MaxPooling1D(pool_size=2)(main)
@@ -503,9 +507,12 @@ def build_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
     if Traniable_embedding ==True:
         main = Embedding(max_features, 128)(inp)
     else:
-        main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
+        #main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
+        main = embedding_matrix(inp)
     
     main = Dense(512)(main)
+    #main = Capsule(num_capsule=Num_capsule, dim_capsule=Dim_capsule, routings=Routings,share_weights=True)(main)
+    #main = Flatten()(main)
     main = GlobalMaxPool1D()(main)
     main = Dropout(0.25)(main)
     main = Dense(512)(main)  
@@ -515,7 +522,11 @@ def build_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
     out3 = Dense(classes_3,activation='softmax')(main)
     out4 = Dense(classes_4,activation='softmax')(main)
     out5 = Dense(classes_5,activation='softmax')(main)
-    
+    #out2 = hierarichal_softmax(classes_2,out1,'class_',tree)(out2)
+    #out3 = hierarichal_softmax(classes_3,out2,'order',tree)(out3)
+    #out4 = hierarichal_softmax(classes_4,out3,'family',tree)(out4)
+    #out5 = hierarichal_softmax(classes_5,out4,'genus',tree)(out5)
+
     if classes_6 !=0:
         out6 = Dense(classes_6,activation='softmax')(main)
     else:
@@ -541,7 +552,8 @@ def build_gru(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
     if Traniable_embedding ==True:
         main = Embedding(max_features, 128)(inp)
     else:
-        main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
+        #main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
+        main = embedding_matrix(inp)
     
     main = Bidirectional(GRU(16, return_sequences=True))(main)
     #main = AttentionDecoder(8, 5)(main)
@@ -581,7 +593,8 @@ def build_multitask_mlp(Traniable_embedding,embedding_matrix,max_len,kmer_size,m
     if Traniable_embedding ==True:
         main = Embedding(max_features, 128)(inp)
     else:
-        main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
+        #main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
+        main = embedding_matrix(inp)
 
     main = Dense(512)(main)
     main = GlobalMaxPool1D()(main)
@@ -714,3 +727,155 @@ class Attention_layer(Layer):
 
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[-1]
+
+
+# Building a seperable con simialr to Google seq2species architecture
+# These parameters were tune on RefSeq amplicon data not insiloc processed SILVA, but it's the closest way to compare AmpliconNet to Seq2Species
+def build_sepconv(Traniable_embedding,embedding_matrix,max_len,kmer_size,metrics,
+    classes_1,classes_2,classes_3,classes_4,classes_5,classes_6):
+
+    inp = Input(shape=(max_len,),dtype='uint16')
+    max_features = 4**kmer_size +1
+    if Traniable_embedding ==True:
+        main = Embedding(max_features, 128)(inp)
+    else:
+        #main = Embedding(max_features, vector_size, weights=[embedding_matrix],trainable=False)(inp)
+        main = embedding_matrix(inp)
+
+    main = SeparableConv1D(84 ,(5))(main)
+    main = Dropout(0.5)(main)
+    main = LeakyReLU()(main)
+
+    main = SeparableConv1D(58,(9))(main)
+    main = Dropout(0.5)(main)
+    main = LeakyReLU()(main)
+
+    main = SeparableConv1D(180,(13),)(main)
+    main = Dropout(0.5)(main)
+    main = LeakyReLU()(main)
+
+    main = Dense(2800)(main)
+    main = Dropout(0.5)(main)
+    main = LeakyReLU()(main)
+    #main = Dense(2800)(main)
+
+    main = GlobalAveragePooling1D()(main)
+    out1 = Dense(classes_1,activation='softmax')(main)
+    out2 = Dense(classes_2,activation='softmax')(main)
+    out3 = Dense(classes_3,activation='softmax')(main)
+    out4 = Dense(classes_4,activation='softmax')(main)
+    out5 = Dense(classes_5,activation='softmax')(main)
+    if classes_6 !=0:
+        out6 = Dense(classes_6,activation='softmax')(main)
+    else:
+        pass
+    if metrics =='f1':
+        metrics = f1
+    elif metrics == 'precision-recall':
+        metrics = [keras_metrics.precision(), keras_metrics.recall()]
+    else:
+        pass
+    model = Model(inputs=[inp], outputs=[out1,out2,out3,out4,out5])
+    optimizer = Adam(lr=0.001)
+    model.compile(loss='sparse_categorical_crossentropy',optimizer=optimizer,metrics=[metrics])
+    return model
+
+# Hierarchical Softmax layer for training
+# Under develeopment
+from keras.layers import Lambda
+#tree = pd.read_csv('./V2_dumpy/tree.csv')
+ranks = ['phylum','class_','order','family','genus']
+def hierarichal_softmax(num_class,higher_rank_softmax,rank,tree, **kwargs):
+    #x = Dense(num_class,'softmax')(x)
+    def func(x):
+        
+        index = ranks.index(rank)
+        higher_rank = ranks[index-1]
+        y_1 = K.argmax(higher_rank_softmax,axis=-1)
+        pool = K.equal(tree[higher_rank],y_1[0])
+        print(pool)
+
+        y_2_ind = tree[pool][rank].unique()
+        
+        y_2 = x[y_2_ind].argmax(-1)
+        y_2 = y_2_ind[y_2]
+        y_2 = to_categorical(y_2,num_classes=num_class)
+        
+        return y_2
+        
+    return Lambda(func, **kwargs)
+
+# Capsule Layer
+
+gru_len = 128
+Routings = 5
+Num_capsule = 10
+Dim_capsule = 16
+dropout_p = 0.3
+rate_drop_dense = 0.3
+
+def squash(x, axis=-1):
+    s_squared_norm = K.sum(K.square(x), axis, keepdims=True)
+    scale = K.sqrt(s_squared_norm + K.epsilon())
+    return x / scale
+
+class Capsule(Layer):
+    def __init__(self, num_capsule, dim_capsule, routings=3, kernel_size=(9, 1), share_weights=True,
+                 activation='default', **kwargs):
+        super(Capsule, self).__init__(**kwargs)
+        self.num_capsule = num_capsule
+        self.dim_capsule = dim_capsule
+        self.routings = routings
+        self.kernel_size = kernel_size
+        self.share_weights = share_weights
+        if activation == 'default':
+            self.activation = squash
+        else:
+            self.activation = Activation(activation)
+
+    def build(self, input_shape):
+        super(Capsule, self).build(input_shape)
+        input_dim_capsule = input_shape[-1]
+        if self.share_weights:
+            self.W = self.add_weight(name='capsule_kernel',
+                                     shape=(1, input_dim_capsule,
+                                            self.num_capsule * self.dim_capsule),
+                                     # shape=self.kernel_size,
+                                     initializer='glorot_uniform',
+                                     trainable=True)
+        else:
+            input_num_capsule = input_shape[-2]
+            self.W = self.add_weight(name='capsule_kernel',
+                                     shape=(input_num_capsule,
+                                            input_dim_capsule,
+                                            self.num_capsule * self.dim_capsule),
+                                     initializer='glorot_uniform',
+                                     trainable=True)
+
+    def call(self, u_vecs):
+        if self.share_weights:
+            u_hat_vecs = K.conv1d(u_vecs, self.W)
+        else:
+            u_hat_vecs = K.local_conv1d(u_vecs, self.W, [1], [1])
+
+        batch_size = K.shape(u_vecs)[0]
+        input_num_capsule = K.shape(u_vecs)[1]
+        u_hat_vecs = K.reshape(u_hat_vecs, (batch_size, input_num_capsule,
+                                            self.num_capsule, self.dim_capsule))
+        u_hat_vecs = K.permute_dimensions(u_hat_vecs, (0, 2, 1, 3))
+        # final u_hat_vecs.shape = [None, num_capsule, input_num_capsule, dim_capsule]
+
+        b = K.zeros_like(u_hat_vecs[:, :, :, 0])  # shape = [None, num_capsule, input_num_capsule]
+        for i in range(self.routings):
+            b = K.permute_dimensions(b, (0, 2, 1))  # shape = [None, input_num_capsule, num_capsule]
+            c = K.softmax(b)
+            c = K.permute_dimensions(c, (0, 2, 1))
+            b = K.permute_dimensions(b, (0, 2, 1))
+            outputs = self.activation(K.batch_dot(c, u_hat_vecs, [2, 2]))
+            if i < self.routings - 1:
+                b = K.batch_dot(outputs, u_hat_vecs, [2, 3])
+
+        return outputs
+
+    def compute_output_shape(self, input_shape):
+        return (None, self.num_capsule, self.dim_capsule)
