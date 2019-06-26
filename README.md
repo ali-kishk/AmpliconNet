@@ -31,6 +31,7 @@ python src/Predict_Taxonomy_Table.py --pred_dir ./test_pred/ --o-taxa_table ./te
 This taxonomy table can be imported by MEGAN (import> Text (csv) format > Classification >Taxonomy)
 
 Example stacked bar using MEGAN for the generated taxonomy table 3 files in test_fastq
+![alt text](https://raw.githubusercontent.com/ali-kishk/AmpliconNet/master/test_Biom_taxon.png)
 
 ### Converting the taxonomy table to BIOM 2.1.7 file
 #### (for any other tool rather than MEGAN as MEGAN support only BIOM 1.0) 
