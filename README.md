@@ -5,26 +5,16 @@
 A. Kishk and M. El-Hadidi, "AmpliconNet: Sequence Based Multi-layer Perceptron for Amplicon Read Classification Using Real-time Data Augmentation," 2018 IEEE International Conference on Bioinformatics and Biomedicine (BIBM), Madrid, Spain, 2018, pp. 2413-2418.
 doi: 10.1109/BIBM.2018.8621287
 
-## What's Taxonomic classification:
-A nice brief to taxonomic classification by Rob Knight:
-https://www.youtube.com/watch?v=HkwFdzFLZ0I
-
-## Our BIBM Presentation:
-https://youtu.be/8RTjeJYX-0k
-
-# AmpliconNet in Arabic:
-part1: https://youtu.be/qxK9fxugMf0
-part2: https://youtu.be/kNfPmOuA0Nk
-
 # Usage
 
-## In prediction
+## In prediction against Fastq / Fasta files
 
 ```bash
-python src/predict --dir_path INPUT_FASTQ_DIR  --database models/V46 --output_dir OUTPUT_DIRECTORY
+python src/predict --dir_path test_fastq  --database models/V46 --output_dir test_pred --input_type fastq
 
 ```
-Database have to be changed according the HVR primersof the study
+test_pred directory will contain prediction files for each fastq/ fasta file in the test_fastq directory
+Reference model have to be changed according the HVR primers of the study
 
 for more parameters
 
@@ -34,13 +24,21 @@ python src/predict --help
 ```
 
 ## Building a taxonomy table
-
+# Generate BIOM compatible taxonomy table
 ```bash
-python src/Predict_Taxonomy_Table.py --pred_dir PREV_PRED_DIR --target_rank genus --o-taxa_table AmpliconNet_taxa_table.csv
+python src/Predict_Taxonomy_Table.py --pred_dir ./test_pred/ --o-taxa_table ./test_Biom_taxon.csv --biom_taxon_table True --target_rank all
+```
+This taxonomy table can be imported by MEGAN (import> Text (csv) format > Classification >Taxonomy)
+
+Example stacked bar using MEGAN for the generated taxonomy table 3 files in test_fastq
+
+# Converting the taxonomy table to BIOM 2.1.7 file 
+## (for any other tool rather than MEGAN as MEGAN support only BIOM 1.0) 
+```bash
+biom convert -i test_Biom_taxon.csv -o test_Biom_taxon_hdf5.biom --table-type="Taxon table" --to-hdf5
 ```
 
 ## Training a new model
-
 ```bash
 python src/SILVA_header_2_csv.py --silva_path SILVA_132_SSURef_tax_silva.fasta  --silva_header SILVA_header_All_Taxa.csv
 
@@ -50,6 +48,18 @@ python src/train.py --database_dir models/V2 --kmer_size 6  --batch_size 250 --t
 
 python src/evaluate.py --database_dir models/V2 --kmer_size 6 --batch_size 250  --training_mode mlp_sk
 ```
+
+## What's Taxonomic classification:
+A nice brief to taxonomic classification by Rob Knight:
+https://www.youtube.com/watch?v=HkwFdzFLZ0I
+
+## Our BIBM Presentation:
+https://youtu.be/8RTjeJYX-0k
+
+## AmpliconNet in Arabic:
+part1: https://youtu.be/qxK9fxugMf0
+part2: https://youtu.be/kNfPmOuA0Nk
+
 ## Abstract
 Taxonomic assignment is the core of targeted metagenomics approaches that aims to assign sequencing reads to
 their corresponding taxonomy. Sequence similarity searching and machine learning (ML) are two commonly used approaches for
