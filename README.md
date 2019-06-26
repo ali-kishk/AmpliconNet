@@ -5,9 +5,9 @@
 A. Kishk and M. El-Hadidi, "AmpliconNet: Sequence Based Multi-layer Perceptron for Amplicon Read Classification Using Real-time Data Augmentation," 2018 IEEE International Conference on Bioinformatics and Biomedicine (BIBM), Madrid, Spain, 2018, pp. 2413-2418.
 doi: 10.1109/BIBM.2018.8621287
 
-# Usage
+## Usage
 
-## In prediction against Fastq / Fasta files
+### In prediction against Fastq / Fasta files
 
 ```bash
 python src/predict --dir_path test_fastq  --database models/V46 --output_dir test_pred --input_type fastq
@@ -24,7 +24,7 @@ python src/predict --help
 ```
 
 ## Building a taxonomy table
-# Generate BIOM compatible taxonomy table
+### Generate BIOM compatible taxonomy table
 ```bash
 python src/Predict_Taxonomy_Table.py --pred_dir ./test_pred/ --o-taxa_table ./test_Biom_taxon.csv --biom_taxon_table True --target_rank all
 ```
@@ -32,13 +32,13 @@ This taxonomy table can be imported by MEGAN (import> Text (csv) format > Classi
 
 Example stacked bar using MEGAN for the generated taxonomy table 3 files in test_fastq
 
-# Converting the taxonomy table to BIOM 2.1.7 file 
-## (for any other tool rather than MEGAN as MEGAN support only BIOM 1.0) 
+### Converting the taxonomy table to BIOM 2.1.7 file
+#### (for any other tool rather than MEGAN as MEGAN support only BIOM 1.0) 
 ```bash
 biom convert -i test_Biom_taxon.csv -o test_Biom_taxon_hdf5.biom --table-type="Taxon table" --to-hdf5
 ```
 
-## Training a new model
+### Training a new model
 ```bash
 python src/SILVA_header_2_csv.py --silva_path SILVA_132_SSURef_tax_silva.fasta  --silva_header SILVA_header_All_Taxa.csv
 
