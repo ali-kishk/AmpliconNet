@@ -1,0 +1,41 @@
+Taxon_ID	SRR2761035.fasta	SRR2761036.fasta	SRR2761034.fasta
+k__Bacteria;p__Firmicutes;c__Bacilli;o__Bacillales;f__Staphylococcaceae;g__Staphylococcus	26.0	32.0	3.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__UNK;f__UNK;g__UNK	2948.0	131.0	213.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Pseudomonadales;f__Moraxellaceae;g__Acinetobacter	1.0	3.0	0.0
+k__Bacteria;p__Synergistetes;c__Synergistia;o__Synergistales;f__Synergistaceae;g__Synergistaceae__uncultured	1.0	0.0	0.0
+k__Bacteria;p__Proteobacteria;c__UNK;o__UNK;f__UNK;g__UNK	67.0	25.0	19.0
+k__Bacteria;p__Firmicutes;c__UNK;o__UNK;f__UNK;g__UNK	464.0	707.0	22.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Betaproteobacteriales;f__Burkholderiaceae;g__Burkholderia-Caballeronia-Paraburkholderia	276.0	4.0	1.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Oceanospirillales;f__Halomonadaceae;g__Halomonas	2.0	0.0	0.0
+k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__UNK;f__UNK;g__UNK	2.0	22.0	14.0
+k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__UNK;g__UNK	21.0	2.0	0.0
+k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__Lachnospiraceae;g__Marvinbryantia	1.0	0.0	0.0
+k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__Lachnospiraceae;g__Lachnospiraceae__uncultured	13.0	3.0	17.0
+k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__Tannerellaceae;g__Parabacteroides	2.0	0.0	0.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Pseudomonadales;f__Pseudomonadaceae;g__Pseudomonas	3.0	2.0	3.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Pseudomonadales;f__UNK;g__UNK	334.0	7.0	14.0
+k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__Lachnospiraceae;g__Blautia	4.0	3.0	0.0
+k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__Lachnospiraceae;g__Lachnospiraceae NK4A136 group	14.0	6.0	0.0
+k__Bacteria;p__Actinobacteria;c__Actinobacteria;o__Corynebacteriales;f__Corynebacteriaceae;g__Corynebacterium 1	2.0	0.0	0.0
+k__Bacteria;p__Firmicutes;c__Bacilli;o__UNK;f__UNK;g__UNK	4.0	8.0	1.0
+k__Bacteria;p__Firmicutes;c__Bacilli;o__Bacillales;f__UNK;g__UNK	1.0	2.0	0.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Betaproteobacteriales;f__UNK;g__UNK	1.0	0.0	0.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Betaproteobacteriales;f__Burkholderiaceae;g__Diaphorobacter	1.0	0.0	0.0
+k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__Prevotellaceae;g__Prevotella 2	1.0	2.0	0.0
+k__Bacteria;p__Bacteroidetes;c__UNK;o__UNK;f__UNK;g__UNK	1.0	0.0	1.0
+k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__UNK;g__UNK	3.0	0.0	2.0
+k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__Ruminococcaceae;g__Ruminococcaceae UCG-005	1.0	0.0	15.0
+k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__Lachnospiraceae;g__Roseburia	1.0	0.0	0.0
+k__Bacteria;p__Planctomycetes;c__Planctomycetacia;o__Pirellulales;f__Pirellulaceae;g__Pirellulaceae__uncultured	0.0	1.0	0.0
+k__Bacteria;p__Spirochaetes;c__Leptospirae;o__Leptospirales;f__Leptospiraceae;g__Leptospira	0.0	1.0	0.0
+k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Chitinophagales;f__UNK;g__UNK	0.0	1.0	0.0
+k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__Prevotellaceae;g__Alloprevotella	0.0	1.0	0.0
+k__Bacteria;p__Actinobacteria;c__UNK;o__UNK;f__UNK;g__UNK	0.0	0.0	38.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Vibrionales;f__Vibrionaceae;g__Vibrio	0.0	0.0	1.0
+k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__Bacteroidaceae;g__Bacteroides	0.0	0.0	1.0
+k__Bacteria;p__Actinobacteria;c__Actinobacteria;o__Corynebacteriales;f__UNK;g__UNK	0.0	0.0	1.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacteriales;f__Enterobacteriaceae;g__Escherichia-Shigella	0.0	0.0	1.0
+k__Bacteria;p__Planctomycetes;c__UNK;o__UNK;f__UNK;g__UNK	0.0	0.0	3.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacteriales;f__Enterobacteriaceae;g__Pantoea	0.0	0.0	1.0
+k__Bacteria;p__Actinobacteria;c__Actinobacteria;o__Corynebacteriales;f__Mycobacteriaceae;g__Mycobacterium	0.0	0.0	1.0
+k__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Thiotrichales;f__Thiotrichaceae;g__Thiotrichaceae__uncultured	0.0	0.0	1.0
